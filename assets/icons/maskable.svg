@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="کمزی">
+  <rect width="512" height="512" fill="#D71920"/>
+  <g transform="translate(256 232) scale(0.62)">
+    <path d="M-116 -46a116 116 0 0 1 232 0z" fill="#FFFFFF"/>
+    <rect x="-132" y="-48" width="264" height="42" rx="21" fill="#FFFFFF"/>
+    <circle cx="0" cy="70" r="74" fill="#A61218"/>
+    <circle cx="0" cy="70" r="46" fill="#D71920"/>
+    <circle cx="-18" cy="52" r="15" fill="#E0F7FC"/>
+    <path d="M-22 128h44v34h-44z" fill="#FFFFFF"/>
+    <rect x="-62" y="158" width="124" height="24" rx="12" fill="#FFFFFF"/>
+  </g>
+</svg>

@@ -1,0 +1,620 @@
+/* ================================================================
+   Camzy — Account › Contact (/account/contact)
+   Account-area redesign of the public contact page. Same data source
+   (Admin → اطلاعات فروشگاه via /api/settings) and same contact hooks
+   (data-setting / tel: / mailto: / #contact-map), laid out with the
+   account panel/row vocabulary instead of the public contact cards.
+   ================================================================ */
+
+/* ── Rhythm: one consistent gap between the account panels ─────── */
+.account-content--contact > * + * { margin-top: 16px; }
+
+.ac-breadcrumb__current { color: #3f4064; font-weight: 600; }
+
+/* ── Lead copy ───────────────────────────────────────────────── */
+.ac-contact__lead {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #6b7280;
+  margin-top: -8px;
+}
+.ac-contact__lead strong { color: #3f4064; font-weight: 600; }
+
+/* ── Quick action tiles ──────────────────────────────────────── */
+.ac-contact__quick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.ac-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: #fafafa;
+  border: 1px solid #ececef; border-radius: var(--radius-xl);
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.ac-tile:hover { background: #fff; border-color: var(--color-primary-200); }
+.ac-tile:active { transform: scale(.99); }
+.ac-tile__icon {
+  width: 40px;
+  height: 40px; border-radius: var(--radius-xl);
+  background: #fff;
+  border: 1px solid #ececef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #3f4064;
+  flex-shrink: 0;
+}
+.ac-tile__icon svg { width: 19px; height: 19px; }
+.ac-tile--primary { background: var(--color-primary-50); border-color: var(--color-primary-200); }
+.ac-tile--primary .ac-tile__icon { background: #fff; border-color: var(--color-primary-200); color: var(--color-primary-dark); }
+.ac-tile--primary:hover { border-color: var(--color-primary); }
+.ac-tile__label { font-size: 13px; font-weight: 700; color: #0c0c0c; line-height: 1.5; }
+.ac-tile__hint { font-size: 11px; color: #81858b; line-height: 1.5; }
+
+/* ── Panel (account section) ─────────────────────────────────── */
+.ac-panel {
+  background: #fff;
+  border: 1px solid #e0e0e2; border-radius: var(--radius-xl);
+  padding: 16px;
+}
+.ac-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ac-panel__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0c0c0c;
+  line-height: 1.5;
+}
+.ac-panel__sub { font-size: 11.5px; color: #81858b; line-height: 1.5; }
+.ac-panel__actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* Flush panel: full-bleed body (used by the map section). */
+.ac-panel--flush { padding: 0; overflow: hidden; }
+.ac-panel--flush .ac-panel__head { margin: 0; padding: 12px 14px; border-bottom: 1px solid #f0f0f1; }
+
+/* ── Contact rows (label / value / hint) ─────────────────────── */
+.ac-rows { display: flex; flex-direction: column; }
+.ac-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 2px;
+  border-top: 1px solid #f0f0f1;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  transition: background .15s; border-radius: var(--radius-lg);
+}
+.ac-rows > .ac-row:first-child { border-top: none; }
+a.ac-row:hover { background: #fafafa; }
+.ac-row__icon {
+  grid-column: 1;
+  grid-row: 1;
+  width: 42px;
+  height: 42px; border-radius: var(--radius-xl);
+  background: #f3f4f6;
+  border: 1px solid #ececef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #3f4064;
+  flex-shrink: 0;
+}
+.ac-row__icon svg { width: 19px; height: 19px; }
+.ac-row--accent .ac-row__icon { background: var(--color-primary-50); border-color: var(--color-primary-200); color: var(--color-primary-dark); }
+.ac-row__body {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ac-row__label { font-size: 11px; font-weight: 600; color: #81858b; line-height: 1.5; }
+.ac-row__value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0c0c0c;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.ac-row__value--ltr { direction: ltr; text-align: right; }
+.ac-row__meta {
+  grid-column: 3;
+  grid-row: 1;
+  font-size: 11.5px;
+  color: #81858b;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.ac-row__chevron {
+  grid-column: 4;
+  grid-row: 1;
+  width: 7px;
+  height: 7px;
+  border-left: 1.5px solid #c8ccd1;
+  border-bottom: 1.5px solid #c8ccd1;
+  transform: rotate(-45deg);
+  flex-shrink: 0;
+}
+div.ac-row--static { cursor: default; }
+div.ac-row--static:hover { background: transparent; }
+div.ac-row--static .ac-row__chevron { display: none; }
+
+/* ── Topic chips ─────────────────────────────────────────── */
+.ac-chips { display: flex; flex-direction: column; gap: 8px; }
+.ac-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  background: #fafafa;
+  border: 1px solid #ececef; border-radius: var(--radius-xl);
+  font-family: inherit;
+  font-size: 13px;
+  color: #232430;
+  text-align: right;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.ac-chip:hover { background: #fff; border-color: var(--color-primary-200); }
+.ac-chip:active { background: #f3f4f6; }
+.ac-chip svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--color-primary-dark); }
+.ac-chip__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ac-chip__label { font-size: 12.5px; font-weight: 700; line-height: 1.5; }
+.ac-chip__desc { font-size: 11px; color: #81858b; line-height: 1.5; }
+
+/* ── Map section ─────────────────────────────────────────────── */
+.ac-map {
+  position: relative;
+  height: 200px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  color: #9ca3af;
+  overflow: hidden;
+}
+.ac-map__pin {
+  width: 46px;
+  height: 46px; border-radius: var(--radius-2xl);
+  background: #fff;
+  border: 1px solid #ececef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+}
+.ac-map__pin svg { width: 21px; height: 21px; }
+.ac-map__fallback { font-size: 12px; font-weight: 500; color: #6b7280; padding: 0 14px; text-align: center; line-height: 1.6; }
+.ac-map iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #e5e7eb;
+  z-index: 1;
+}
+/* common.js flips the card into map mode once a store map URL is saved. */
+.ac-map.contact-map-card__body--has-map .ac-map__pin,
+.ac-map.contact-map-card__body--has-map .ac-map__fallback { display: none; }
+.ac-map__map { position: absolute; inset: 0; z-index: 1; background: #e5e7eb; cursor: pointer; }
+.ac-map__map[hidden] { display: none; }
+.ac-map__map .leaflet-container { width: 100%; height: 100%; cursor: pointer; font: inherit; }
+.ac-map__map .leaflet-bottom.leaflet-right { top: 6px; bottom: auto; }
+.ac-map__map .leaflet-control-attribution { font-size: 9px; background: rgba(255, 255, 255, .75); }
+.ac-map__caption {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  left: 10px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 20px);
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, .94);
+  border: 1px solid #ececef; border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #232430;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+.ac-map__caption svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--color-primary-dark); }
+.ac-map__caption span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.ac-map__caption[hidden] { display: none; }
+.ac-map.contact-map-card__body--has-map .ac-map__caption:not([hidden]) { display: flex; }
+
+/* Map actions (shared hook class used by common.js / site-content.js). */
+.contact-map-card__action {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200); border-radius: var(--radius-full);
+  padding: 5px 10px;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.contact-map-card__action:hover { background: var(--color-primary-100); border-color: var(--color-primary); }
+
+/* ── Message form ────────────────────────────────────────────── */
+.ac-contact__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.ac-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.ac-panel--form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.ac-panel--form .input-label { font-size: 12px; font-weight: 600; color: #3f4064; }
+.ac-panel--form .input {
+  height: var(--form-card-input-height); border-radius: var(--radius-md);
+  border: 1px solid #e0e0e2;
+  background: #fff;
+  font-size: var(--form-card-input-font-size);
+  font-family: inherit;
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ac-panel--form .input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-50);
+  outline: none;
+}
+.ac-panel--form textarea.input {
+  height: auto;
+  min-height: 110px;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.75;
+}
+.ac-panel--form select.input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+  padding-left: 30px;
+}
+.ac-form__submit {
+  min-height: 46px;
+  width: 100%; border-radius: var(--radius-xl);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(215, 25, 32, .25);
+}
+.ac-form__submit:hover { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
+.ac-form__submit:active { transform: scale(.99); }
+.ac-form__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f1;
+  font-size: 11.5px;
+  color: #81858b;
+  line-height: 1.6;
+}
+.ac-form__foot svg { width: 14px; height: 14px; flex-shrink: 0; color: #22c55e; }
+
+/* ── Responsive: ≤1240px drops the quick tiles to 2-up and stacks the
+      map/form panels before the account shell collapses at ≤900px ── */
+@media (max-width: 1240px) {
+  .ac-contact__quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ac-contact__split { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .ac-form__grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+
+/* ── Responsive: ≤900px follows the account app shell ────────── */
+@media (max-width: 900px) {
+  .account-content--contact > * + * { margin-top: 12px; }
+  .ac-contact__lead { margin-top: -4px; font-size: 12.5px; }
+  .ac-contact__quick { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ac-tile { padding: 12px 10px; border-radius: var(--radius-xl); border-color: #ececef; }
+  .ac-tile__icon { width: 36px; height: 36px; border-radius: var(--radius-xl); }
+  .ac-tile__icon svg { width: 18px; height: 18px; }
+  .ac-tile__label { font-size: 12.5px; }
+  .ac-tile__hint { display: none; }
+  .ac-panel { border-radius: var(--radius-xl); padding: 14px; border-color: #ececef; }
+  .ac-panel--flush { padding: 0; }
+  .ac-panel__head { margin-bottom: 10px; }
+  .ac-panel--flush .ac-panel__head { padding: 12px 14px; }
+  .ac-panel__title { font-size: 13.5px; }
+  .ac-row {
+    grid-template-columns: 38px minmax(0, 1fr) 8px;
+    gap: 10px;
+    padding: 12px 2px;
+  }
+  .ac-row__icon { width: 38px; height: 38px; border-radius: var(--radius-xl); }
+  .ac-row__icon svg { width: 18px; height: 18px; }
+  .ac-row__value { font-size: 13px; }
+  .ac-row__meta { grid-column: 1 / -1; grid-row: 2; white-space: normal; }
+  .ac-row__chevron { grid-column: 3; grid-row: 1; }
+  .ac-chips { gap: 7px; }
+  .ac-chip { min-height: 48px; padding: 10px 12px; border-radius: var(--radius-xl); }
+  .ac-contact__split { grid-template-columns: 1fr; gap: 12px; }
+  .ac-map { height: 170px; }
+  .ac-form__grid { grid-template-columns: 1fr; gap: 0; }
+  .ac-panel--form .input { height: var(--form-card-input-height-mobile); font-size: var(--form-card-input-font-size-mobile); }
+  .ac-panel--form textarea.input { min-height: 120px; }
+  .ac-form__submit { min-height: 48px; }
+}
+@media (max-width: 480px) {
+  .ac-row__meta { font-size: 11px; }
+  .ac-chip__desc { font-size: 10.5px; }
+}
+
+/* ── Support center: auth prompt ─────────────────────────────── */
+.ac-auth-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 22px 14px;
+}
+.ac-auth-prompt__icon {
+  width: 52px;
+  height: 52px; border-radius: var(--radius-2xl);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-dark);
+  flex-shrink: 0;
+}
+.ac-auth-prompt__icon svg { width: 24px; height: 24px; }
+.ac-auth-prompt__title { font-size: 14px; font-weight: 700; color: #0c0c0c; margin: 6px 0 0; }
+.ac-auth-prompt__text { font-size: 12.5px; color: #81858b; line-height: 1.8; margin: 0; max-width: 420px; }
+.ac-auth-prompt__actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* ── Support center: ticket list ─────────────────────────────── */
+.ac-ticket-list { display: flex; flex-direction: column; }
+.ac-ticket-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 4px;
+  background: none;
+  border: none;
+  border-top: 1px solid #f0f0f1; border-radius: var(--radius-lg);
+  font-family: inherit;
+  font-size: 13px;
+  color: #232430;
+  text-align: right;
+  cursor: pointer;
+  transition: background .15s;
+}
+.ac-ticket-list > .ac-ticket-item:first-child { border-top: none; }
+.ac-ticket-item:hover { background: #fafafa; }
+.ac-ticket-item:active { background: #f3f4f6; }
+.ac-ticket-item__num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200); border-radius: var(--radius-lg);
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+.ac-ticket-item__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ac-ticket-item__subject {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0c0c0c;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ac-ticket-item__meta { font-size: 11px; color: #81858b; line-height: 1.5; }
+
+/* ── Support center: status badges ───────────────────────────── */
+.ac-ticket-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 3px 9px; border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.ac-ticket-status--open { background: #e8f9f0; border-color: #bbf7d0; color: #15803d; }
+/* pending keeps its semantic warning amber (not brand yellow) */
+.ac-ticket-status--pending { background: var(--color-warning-50, #FFF3E0); border-color: #FFE2C2; color: var(--color-warning, #ED6C02); }
+.ac-ticket-status--answered { background: #FBD9D6; border-color: #FDECEA; color: #D71920; }
+.ac-ticket-status--closed { background: #f3f4f6; border-color: #e5e7eb; color: #6b7280; }
+
+/* ── Support center: empty state ─────────────────────────────── */
+/* Uses the canonical .empty-state structure; only the icon chip keeps its
+   support-centre-specific surface. The element carries both classes. */
+.empty-state.ac-ticket-empty { gap: 4px; padding: 22px 14px; }
+.empty-state.ac-ticket-empty .empty-state__icon {
+  width: 52px;
+  height: 52px; border-radius: var(--radius-2xl);
+  background: #f3f4f6;
+  border: 1px solid #ececef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+.empty-state.ac-ticket-empty .empty-state__icon svg { width: 24px; height: 24px; }
+.empty-state.ac-ticket-empty .empty-state__title { font-size: 13.5px; font-weight: 700; color: #3f4064; margin: 6px 0 0; }
+.empty-state.ac-ticket-empty .empty-state__text { font-size: 12.5px; color: #81858b; line-height: 1.8; margin: 0; }
+
+/* ── Support center: ticket detail + conversation ────────────── */
+.ac-ticket-detail__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ac-ticket-detail__num { font-size: 12.5px; font-weight: 700; color: #3f4064; }
+.ac-ticket-detail__subject {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: #fafafa;
+  border: 1px solid #f0f0f1; border-radius: var(--radius-xl);
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  color: #0c0c0c;
+  line-height: 1.6;
+}
+.ac-ticket-detail__cat {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200); border-radius: var(--radius-full);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.ac-ticket-detail__closed {
+  font-size: 12.5px;
+  color: #81858b;
+  background: #f3f4f6;
+  border: 1px solid #ececef; border-radius: var(--radius-xl);
+  padding: 10px 12px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.ac-msgs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 4px 2px;
+  margin-bottom: 12px;
+}
+.ac-msg { display: flex; }
+.ac-msg--mine { justify-content: flex-start; }
+.ac-msg--admin { justify-content: flex-end; }
+.ac-msg__bubble {
+  max-width: 82%;
+  padding: 10px 12px; border-radius: var(--radius-xl);
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ac-msg--mine .ac-msg__bubble { background: var(--color-primary-50); border: 1px solid var(--color-primary-200); border-bottom-right-radius: var(--radius-sm); }
+.ac-msg--admin .ac-msg__bubble { background: #f3f4f6; border: 1px solid #ececef; border-bottom-left-radius: var(--radius-sm); }
+.ac-msg__head { font-size: 10.5px; font-weight: 600; color: #81858b; margin-bottom: 3px; }
+.ac-msg__text { color: #232430; }
+.ac-msg__att { margin-top: 6px; font-size: 12px; }
+.ac-msg__att img { max-width: 180px; border-radius: var(--radius-lg); display: block; margin-bottom: 4px; }
+.ac-msg__att a { color: #D71920; text-decoration: none; font-weight: 600; }
+.ac-msg__att a:hover { text-decoration: underline; }
+
+/* ── Support center: reply form ──────────────────────────────── */
+.ac-reply {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f1;
+}
+.ac-reply .input {
+  flex: 1; border-radius: var(--radius-md);
+  border: 1px solid #e0e0e2;
+  background: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 44px;
+  line-height: 1.75;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ac-reply .input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-50); outline: none; }
+.ac-reply .btn { min-height: 44px; border-radius: var(--radius-md); padding: 0 18px; font-weight: 700; }
+
+/* ── Support center: form success (ticket number) ────────────── */
+.ac-form-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  background: #e8f9f0;
+  border: 1px solid #bbf7d0; border-radius: var(--radius-xl);
+  font-size: 13px;
+  color: #15803d;
+  line-height: 1.8;
+}
+.ac-form-success__icon {
+  width: 34px;
+  height: 34px; border-radius: var(--radius-xl);
+  background: #fff;
+  border: 1px solid #bbf7d0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #15803d;
+  flex-shrink: 0;
+}
+.ac-form-success__icon svg { width: 18px; height: 18px; }
+.ac-form-success__num { font-weight: 800; font-size: 14px; }
+
+/* ── Responsive: support center ──────────────────────────────── */
+@media (max-width: 900px) {
+  .ac-ticket-item { grid-template-columns: auto minmax(0, 1fr); }
+  .ac-ticket-item .ac-ticket-status { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  .ac-msg__bubble { max-width: 92%; }
+  .ac-reply { flex-direction: column; align-items: stretch; }
+  .ac-reply .btn { width: 100%; }
+}

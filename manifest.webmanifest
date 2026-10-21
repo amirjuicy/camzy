@@ -1,0 +1,86 @@
+﻿{
+  "name": "کمزی | فروشگاه تخصصی دوربین مداربسته و سیستم‌های امنیتی",
+  "short_name": "کمزی",
+  "description": "کمزی — فروشگاه تخصصی دوربین مداربسته، دستگاه DVR و NVR و سیستم‌های امنیتی با ضمانت اصالت کالا و ارسال سریع به سراسر کشور.",
+  "lang": "fa",
+  "dir": "rtl",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
+  "orientation": "any",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "background_color": "#171717",
+  "theme_color": "#171717",
+  "prefer_related_applications": false,
+  "categories": [
+    "shopping",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "فروشگاه",
+      "url": "./shop",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "سبد خرید",
+      "url": "./cart",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "دسته‌بندی‌ها",
+      "url": "./categories",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta name="description" content="انتخاب روش پرداخت سفارش در فرایند خرید کمزی.">
+  <link rel="canonical" href="https://www.camzy.com/checkout/step4">
+  <meta name="robots" content="noindex,nofollow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="کمزی">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:title" content="روش پرداخت | کمزی">
+  <meta property="og:description" content="انتخاب روش پرداخت سفارش در فرایند خرید کمزی.">
+  <meta property="og:url" content="https://www.camzy.com/checkout/step4">
+  <meta property="og:image" content="https://www.camzy.com/assets/images/brand/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="کمزی — فروشگاه تخصصی دوربین مداربسته و سیستم‌های امنیتی">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="روش پرداخت | کمزی">
+  <meta name="twitter:description" content="انتخاب روش پرداخت سفارش در فرایند خرید کمزی.">
+  <meta name="twitter:image" content="https://www.camzy.com/assets/images/brand/og-image.png">
+  <meta name="author" content="کمزی">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>روش پرداخت | کمزی</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/design-system.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/components.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/pages.css">
+<style>
+/* Colors only: exact site tokens (design-system.css / base.css / components.css / pages.css).
+   --color-primary:#D71920 --color-primary-light:#E34A50 --color-primary-50:#FDECEA
+   --bg-body:#FFFFFF --bg-surface:#FFFFFF --bg-surface-alt:#FAFAFA
+   --text-primary:#1A1A1A --text-secondary:#555555 --text-muted:#999999 --text-inverse:#FFFFFF
+   --border-color:#E0E0E0 --border-color-light:#EEEEEE
+   --color-success:#2E7D32 --color-danger:#D32F2F */
+body{font-family:Vazirmatn,system-ui,sans-serif;background:var(--bg-body);color:var(--text-primary);margin:0}
+.co-wrap{max-width:640px;margin:0 auto;padding:24px 16px 48px}
+.co-brand__logo{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-left:8px}.co-brand__logo svg{width:22px;height:22px}.co-brand__logo img{max-height:28px;width:auto}.co-brand{text-align:center;margin:12px 0 20px;font-weight:800;font-size:22px;color:var(--text-primary)}
+.co-steps{display:flex;gap:8px;margin-bottom:20px}
+.co-step{flex:1;text-align:center;font-size:12px;color:var(--text-muted)}
+.co-step i{display:flex;align-items:center;justify-content:center;width:30px;height:30px; border-radius: var(--radius-circle);background:var(--border-color-light);color:var(--text-secondary);font-style:normal;font-weight:700;margin:0 auto 6px}
+.co-step.on{color:var(--text-primary)}.co-step.on i{background:var(--color-primary);color:var(--text-inverse)}
+.co-step.done{color:var(--color-success)}.co-step.done i{background:var(--color-success);color:var(--text-inverse)}
+.co-card{background:var(--bg-surface);border:1px solid var(--border-color-light); border-radius: var(--radius-2xl);padding:24px;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.co-card h1{font-size:18px;margin:0 0 4px;color:var(--text-primary)}.co-card p.sub{color:var(--text-muted);font-size:13px;margin:0 0 18px}
+.co-summary{background:var(--bg-surface-alt);border:1px solid var(--border-color-light);color:var(--text-secondary); border-radius: var(--radius-xl);padding:12px 14px;font-size:13px;margin-bottom:16px;display:flex;flex-direction:column;gap:6px}
+.co-summary .row{display:flex;justify-content:space-between}
+.co-summary .row.total{font-weight:800;font-size:15px;color:var(--text-primary);border-top:1px solid var(--border-color);padding-top:8px}
+.co-summary .row.total span:last-child{color:var(--color-primary)}
+.pay-option{display:flex;align-items:center;gap:12px;border:1px solid var(--border-color);color:var(--text-primary); border-radius: var(--radius-lg);padding:13px 14px;margin-bottom:10px;cursor:pointer;font-size:14px}
+.pay-option:hover{border-color:var(--color-primary)}
+.pay-option.is-active{border-color:var(--color-primary);background:var(--color-primary-50)}
+.pay-option input{accent-color:var(--color-primary)}
+.pay-option small{display:block;color:var(--text-muted);font-size:12px}
+.co-discount{display:flex;gap:8px;margin:6px 0 4px}
+.co-discount .input{flex:1}
+.err{font-size:12px;color:var(--color-danger);min-height:16px}
+.co-nav{display:flex;gap:12px;margin-top:8px}
+/* کارت به کارت bank-card styles live in assets/css/components.css (.bc-*) */
+/* .btn sizing lives in assets/css/pages.css (.co-wrap .btn) */
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-dark)}
+.btn-primary:hover{background:var(--color-primary-light);border-color:var(--color-primary-light)}
+.btn-ghost{background:var(--color-white);border-color:var(--color-primary);color:var(--color-primary)}
+.btn-ghost:hover{background:var(--color-primary-50)}
+.btn:disabled{opacity:.6;cursor:wait}
+.free{color:var(--color-success)}
+</style>
+</head>
+<body>
+<!-- Standalone checkout step: no #site-header / #mobile-header / #site-footer / #site-overlays,
+     so common.js injects no site header or footer. -->
+<div class="co-wrap">
+<div class="co-brand" data-setting="store.name"><span class="co-brand__logo" data-store-logo><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="co-brand__name">کمزی</span></div>
+<div class="co-steps">
+<div class="co-step done"><i>✓</i>اطلاعات مشتری</div>
+<div class="co-step done"><i>✓</i>آدرس ارسال</div>
+<div class="co-step done"><i>✓</i>روش ارسال</div>
+<div class="co-step on"><i>۴</i>روش پرداخت</div>
+</div>
+<div class="co-card">
+<h1>روش پرداخت</h1>
+<p class="sub">آخرین مرحله. روش پرداخت را انتخاب و سفارش را ثبت کنید.</p>
+<div class="co-summary" id="co-summary"><div class="row"><span>در حال محاسبه...</span></div></div>
+<form id="step4-form" novalidate>
+<div id="pay-list"></div>
+<div id="pay-cards" hidden></div>
+<div class="err" id="e-pay"></div>
+<div class="co-discount">
+<input class="input" id="f-discount" placeholder="کد تخفیف" dir="ltr">
+<button type="button" class="btn btn-ghost" id="discount-apply" style="flex:0 0 auto">اعمال</button>
+</div>
+<div class="err" id="e-discount"></div>
+<div class="co-nav">
+<a class="btn btn-ghost" href="/checkout/step3" style="flex:0 0 auto;padding:13px 18px;font-size:14px;text-decoration:none;text-align:center">بازگشت به مرحله قبل</a><button class="btn btn-primary" type="submit" id="pay-submit">پرداخت و ثبت سفارش</button>
+</div>
+<div style="margin-top:12px"><a class="btn btn-ghost" href="/cart" style="display:block;text-align:center;text-decoration:none">بازگشت به سبد خرید</a></div></form>
+</div>
+</div>
+<div class="toast-container"></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/store-logo.js?v=1"></script>
+<script src="assets/js/common.js"></script>
+<script>
+/* Standalone Step 4 — real payment/order flow (same logic as checkout.js),
+   same standalone card design as Steps 1-3. common.js is loaded for the real
+   App (cart sync, settings-driven methods, createOrder) but this page has no
+   header/footer mount elements, so none are injected. */
+(function(){
+'use strict';
+var K='as_checkout_draft';
+function load(){try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return{}}}
+var d=load();
+if(!d.mobile){location.href='/checkout/step1';return;}
+if(!d.postalCode){location.href='/checkout/step2';return;}
+if(d.shippingId==null){location.href='/checkout/step3';return;}
+function parseNum(v,fb){var n=Math.round(Number(String(v==null?'':v).replace(/[^0-9.-]/g,'')));return (isFinite(n)&&n>=0)?n:fb;}
+function fa(n){try{return Number(n).toLocaleString('fa-IR')}catch(e){return String(n)}}
+var Settings={cost:35000,freeFrom:500000,method:'',payOnline:true,payCod:false,payCard:true,
+payTitle:{online:'پرداخت آنلاین',cod:'پرداخت در محل',card:'کارت به کارت'},
+payDesc:{online:'پرداخت از طریق درگاه بانکی',cod:'پرداخت نقدی هنگام تحویل',card:'پرداخت از طریق انتقال بانکی'}};
+var Methods=[];
+var Cards=[];
+var cardId=null;
+var discount={code:'',amount:0};
+function subtotal(){try{return App.getCartTotal();}catch(e){return 0;}}
+function method(){var m=Methods.find(function(x){return String(x.id)===String(d.shippingId);});
+  if(m)return m;m=Methods.find(function(x){return x.isDefault;});return m||Methods[0]||{id:'normal',name:'ارسال عادی',cost:0};}
+function freeShip(total){return Settings.freeFrom>0?total>=Settings.freeFrom:(method().cost===0);}
+function shipCost(){if(freeShip(subtotal()))return 0;return Math.max(0,Math.round(Number(method().cost)||0));}
+function discAmount(){return discount.code?Math.min(discount.amount,subtotal()):0;}
+function payLabel(v){if(v==='card')return 'کارت به کارت';if(v==='cod')return 'پرداخت در محل';return 'پرداخت آنلاین';}
+function enabledPayments(){
+  var out=[];
+  if(Settings.payOnline)out.push({v:'online',t:Settings.payTitle.online,s:Settings.payDesc.online});
+  if(Settings.payCod)out.push({v:'cod',t:Settings.payTitle.cod,s:Settings.payDesc.cod});
+  if(Settings.payCard)out.push({v:'card',t:Settings.payTitle.card,s:Settings.payDesc.card});
+  return out.length?out:[{v:'online',t:Settings.payTitle.online,s:Settings.payDesc.online}];
+}
+function render(){
+  var st=subtotal(),sc=shipCost(),da=discAmount();
+  var m=method();
+  document.getElementById('co-summary').innerHTML=
+    '<div class="row"><span>جمع سبد خرید</span><span>'+fa(st)+' تومان</span></div>'
+    +'<div class="row"><span>هزینه ارسال ('+m.name+')</span><span>'+(sc===0?'<span class="free">رایگان</span>':fa(sc)+' تومان')+'</span></div>'
+    +(da>0?'<div class="row"><span>تخفیف ('+discount.code+')</span><span>− '+fa(da)+' تومان</span></div>':'')
+    +'<div class="row total"><span>مبلغ قابل پرداخت</span><span>'+fa(Math.max(0,st+sc-da))+' تومان</span></div>';
+  var pays=enabledPayments();
+  var cur=document.querySelector('input[name="pay"]:checked');
+  var curV=cur?cur.value:(d.payment||pays[0].v);
+  if(!pays.some(function(p){return p.v===curV;}))curV=pays[0].v;
+  document.getElementById('pay-list').innerHTML=pays.map(function(p){
+    var on=p.v===curV;
+    return '<label class="pay-option'+(on?' is-active':'')+'"><input type="radio" name="pay" value="'+p.v+'"'+(on?' checked':'')+'>'
+      +'<span><b>'+p.t+'</b><small>'+p.s+'</small></span></label>';
+  }).join('');
+  document.querySelectorAll('input[name="pay"]').forEach(function(r){
+    r.addEventListener('change',function(){
+      document.querySelectorAll('.pay-option').forEach(function(l){l.classList.remove('is-active');});
+      r.closest('.pay-option').classList.add('is-active');
+      renderCards();
+    });
+  });
+  renderCards();
+}
+/* Bank logo: admin-uploaded image, or a neutral fallback mark when none. */
+function bankLogoHtml(c){
+  if(c.logo){
+    return '<img src="'+String(c.logo).replace(/"/g,'&quot;')+'" alt="" onerror="this.parentNode.innerHTML=\'<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'none\\\' stroke=\\\'currentColor\\\' stroke-width=\\\'2\\\' stroke-linecap=\\\'round\\\' stroke-linejoin=\\\'round\\\'><rect x=\\\'2\\\' y=\\\'5\\\' width=\\\'20\\\' height=\\\'14\\\' rx=\\\'2\\\'/><line x1=\\\'2\\\' y1=\\\'10\\\' x2=\\\'22\\\' y2=\\\'10\\\'/></svg>\'">';
+  }
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
+}
+function esc(s){var e=document.createElement('div');e.textContent=s==null?'':String(s);return e.innerHTML;}
+/* Renders the admin-configured bank cards. Only cards that are still enabled
+   (Cards) are listed; the chosen id is kept in the module-scoped cardId. */
+/* ── کارت به کارت: رسید واریز (receipt upload) ──────────────────────────
+   Sits directly below the chosen bank card. Images only, REQUIRED: the order
+   cannot be submitted until the upload succeeded. The file is POSTed to
+   /api/orders/card-receipt right away and the returned path travels with the
+   order payload so admin can view it in the order details. */
+var RECEIPT_MAX_BYTES=5*1024*1024;
+var receiptFile=null;   /* File as picked (also covers the in-flight upload) */
+var receiptMeta=null;   /* {url,name,size} once the server accepted it */
+var receiptPreview='';  /* local object URL for the preview */
+var receiptBusy=false;
+function receiptError(msg){var el=document.getElementById('e-receipt');if(el)el.textContent=msg||'';}
+function clearReceipt(){if(receiptPreview){try{URL.revokeObjectURL(receiptPreview);}catch(e){}}receiptFile=null;receiptMeta=null;receiptPreview='';receiptBusy=false;}
+function fmtBytes(n){n=Number(n)||0;if(n<1024)return n+' بایت';if(n<1024*1024)return (n/1024).toFixed(0)+' کیلوبایت';return (n/1024/1024).toFixed(1)+' مگابایت';}
+function receiptHtml(){
+  var shown=receiptMeta||receiptFile;
+  if(!shown){
+    return '<div class="rc-head">تصویر رسید واریز <small>الزامی — بدون آن ثبت سفارش کارت به کارت ممکن نیست</small></div>'
+      +'<label class="rc-drop'+(receiptBusy?' is-busy':'')+'">'
+      +'<input type="file" id="pay-receipt-file" accept="image/jpeg,image/png,image/webp,image/gif">'
+      +'<span class="rc-drop__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>'
+      +'<span class="rc-drop__title">'+(receiptBusy?'در حال آپلود…':'انتخاب تصویر رسید')+'</span>'
+      +'<span class="rc-drop__hint">JPG، PNG، WebP یا GIF — حداکثر ۵ مگابایت</span>'
+      +'</label><div class="rc-error" id="e-receipt"></div>';
+  }
+  var src=receiptPreview||receiptMeta.url||'';
+  var name=receiptMeta?receiptMeta.name:(receiptFile?receiptFile.name:'');
+  var size=receiptMeta?receiptMeta.size:(receiptFile?receiptFile.size:0);
+  return '<div class="rc-head">تصویر رسید واریز</div>'
+    +'<div class="rc-preview">'
+    +'<img class="rc-preview__img" src="'+esc(src)+'" alt="پیش‌نمایش رسید واریز">'
+    +'<div class="rc-preview__meta">'
+    +'<div class="rc-preview__name">'+esc(name)+'</div>'
+    +'<div class="rc-preview__size">'+fmtBytes(size)+(receiptMeta?' — آپلود شد':' — در حال آپلود…')+'</div>'
+    +'<div class="rc-preview__actions">'
+    +'<label class="rc-btn" style="cursor:pointer">تغییر تصویر<input type="file" id="pay-receipt-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none"></label>'
+    +'<button type="button" class="rc-btn rc-btn--danger" data-receipt-remove>حذف تصویر</button>'
+    +'</div></div></div><div class="rc-error" id="e-receipt"></div>';
+}
+function uploadReceipt(file){
+  receiptFile=file;receiptMeta=null;
+  if(receiptPreview){try{URL.revokeObjectURL(receiptPreview);}catch(e){}}
+  try{receiptPreview=URL.createObjectURL(file);}catch(e){receiptPreview='';}
+  receiptBusy=true;receiptError('');renderCards();
+  var fd=new FormData();fd.append('image',file);
+  fetch('/api/orders/card-receipt',{method:'POST',body:fd})
+    .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,body:j};});})
+    .then(function(res){
+      receiptBusy=false;
+      if(!res.ok)throw new Error((res.body&&res.body.error)||'آپلود تصویر ناموفق بود.');
+      receiptMeta={url:res.body.url,name:res.body.name||file.name,size:res.body.size||file.size};
+      renderCards();
+    })
+    .catch(function(err){
+      receiptBusy=false;clearReceipt();renderCards();
+      receiptError((err&&err.message)||'آپلود تصویر ناموفق بود.');
+    });
+}
+function bindReceipt(host){
+  var input=host.querySelector('#pay-receipt-file');
+  if(input)input.addEventListener('change',function(){
+    var f=this.files&&this.files[0];this.value='';
+    if(!f)return;
+    if(!/^image\/(jpeg|png|webp|gif)$/.test(f.type)){receiptError('فقط تصویر (JPG، PNG، WebP یا GIF) مجاز است.');return;}
+    if(f.size>RECEIPT_MAX_BYTES){receiptError('حجم تصویر نباید بیشتر از ۵ مگابایت باشد.');return;}
+    uploadReceipt(f);
+  });
+  var rm=host.querySelector('[data-receipt-remove]');
+  if(rm)rm.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();clearReceipt();receiptError('');renderCards();});
+}
+function renderCards(){
+  var host=document.getElementById('pay-cards');
+  var sel=document.querySelector('input[name="pay"]:checked');
+  var on=sel&&sel.value==='card';
+  if(!on){host.hidden=true;host.innerHTML='';return;}
+  host.hidden=false;
+  if(!Cards.length){
+    host.innerHTML='<div class="bc-head">انتخاب کارت بانکی</div>'
+      +'<div class="bc-empty">در حال حاضر کارت بانکی فعالی ثبت نشده است. لطفاً با پشتیبانی فروشگاه تماس بگیرید.</div>';
+    return;
+  }
+  if(!Cards.some(function(c){return String(c.id)===String(cardId);})) cardId=null;
+  var html='<div class="bc-head">انتخاب کارت بانکی <small>مبلغ را به شماره کارت زیر واریز کنید</small></div>'
+    +'<div class="bc-grid" role="radiogroup" aria-label="انتخاب کارت بانکی">'
+    +Cards.map(function(c){
+      var act=String(c.id)===String(cardId);
+      return '<label class="bc-item'+(act?' is-active':'')+'" data-card-id="'+c.id+'">'
+        +'<input type="radio" name="bankcard" value="'+c.id+'"'+(act?' checked':'')+'>'
+        +'<div class="bc-card">'
+        +  '<div class="bc-top"><span class="bc-bank"><span class="bc-bank__logo">'+bankLogoHtml(c)+'</span>'+esc(c.bankName)+'</span><span class="bc-chip"></span></div>'
+        +  '<div class="bc-num" data-num="'+esc(c.cardNumberFormatted||c.cardNumber||'')+'">'+(c.cardNumberFormatted||c.cardNumber||'')+'</div>'
+        +  '<div class="bc-foot"><span class="bc-holder">'+(c.cardHolder?'<b>به نام</b>'+esc(c.cardHolder):'')+'</span>'
+        +    '<button type="button" class="bc-copy" data-copy="'+esc(c.cardNumber||'')+'">کپی شماره</button></div>'
+        +'</div></label>';
+    }).join('')
+    +'</div>';
+  var note=Cards.find(function(c){return String(c.id)===String(cardId);});
+  if(note&&note.note) html+='<div class="bc-note">'+esc(note.note)+'</div>';
+  html+='<div class="rc-block">'+receiptHtml()+'</div>';
+  host.innerHTML=html;
+  bindReceipt(host);
+  host.querySelectorAll('input[name="bankcard"]').forEach(function(r){
+    r.addEventListener('change',function(){
+      cardId=r.value;
+      host.querySelectorAll('.bc-item').forEach(function(l){l.classList.remove('is-active');});
+      r.closest('.bc-item').classList.add('is-active');
+      var picked=Cards.find(function(c){return String(c.id)===String(cardId);});
+      var extra=picked&&picked.note?'<div class="bc-note">'+esc(picked.note)+'</div>':'';
+      var curNote=host.querySelector('.bc-note'); if(curNote)curNote.remove();
+      if(extra)host.insertBefore(Object.assign(document.createElement('div'),{innerHTML:extra}).firstChild,host.querySelector('.rc-block'));
+      var er=document.getElementById('e-pay'); if(er)er.textContent='';
+    });
+  });
+  host.querySelectorAll('[data-copy]').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var n=b.getAttribute('data-copy');
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(n).then(function(){
+          b.textContent='کپی شد';setTimeout(function(){b.textContent='کپی شماره';},1600);
+        },function(){});
+      }
+    });
+  });
+}
+    function guards(){
+  if(App.getCart().length===0){location.href='/cart';return false;}
+  // Purchase settings (admin): guest checkout may be allowed. The server
+  // always re-validates; this only decides whether to force login here.
+  var allowGuest=true;
+  try{
+    var cached=null;
+    try{ cached=JSON.parse(localStorage.getItem('as_purchase_settings')||'null'); }catch(e){}
+    if(cached&&cached.allowGuest===false) allowGuest=false;
+  }catch(e){}
+  if(!App.isLoggedIn()&&!allowGuest){try{App.showToast('برای تکمیل خرید ابتدا وارد حساب کاربری شوید.','info');}catch(e){}location.href='/login';return false;}
+  return true;
+}
+function boot(){
+  render();
+  document.getElementById('discount-apply').addEventListener('click',function(){
+    var code=document.getElementById('f-discount').value.trim();
+    var err=document.getElementById('e-discount');
+    if(!code){err.textContent='کد تخفیف را وارد کنید.';return;}
+    err.textContent='';
+    fetch('/api/discounts/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,subtotal:subtotal()})})
+      .then(function(r){return r.json().catch(function(){return{};}).then(function(j){if(!r.ok)throw new Error(j.error||'failed');return j;});})
+      .then(function(x){discount={code:x.code||code.toUpperCase(),amount:Math.max(0,Math.round(Number(x.discount)||0))};render();})
+      .catch(function(){err.textContent='کد تخفیف معتبر نیست.';});
+  });
+  document.getElementById('step4-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var sel=document.querySelector('input[name="pay"]:checked');
+    if(!sel){document.getElementById('e-pay').textContent='یک روش پرداخت انتخاب کنید.';return;}
+    if(sel.value==='card'){
+      if(!Cards.length){document.getElementById('e-pay').textContent='در حال حاضر کارت بانکی فعالی برای پرداخت وجود ندارد.';return;}
+      if(!cardId){document.getElementById('e-pay').textContent='کارت بانکی مورد نظر برای واریز وجه را انتخاب کنید.';return;}
+      /* Don't drop a receipt that is still being uploaded. */
+      if(receiptBusy){document.getElementById('e-pay').textContent='در حال بارگذاری تصویر رسید، لطفاً کمی صبر کنید.';return;}
+      /* کارت به کارت: block the order until the receipt image is uploaded. */
+      if(!receiptMeta||!receiptMeta.url){
+        var noReceiptMsg='برای پرداخت کارت به کارت، ابتدا تصویر رسید واریز را بارگذاری کنید.';
+        document.getElementById('e-pay').textContent=noReceiptMsg;
+        receiptError(noReceiptMsg);
+        return;
+      }
+    }
+    document.getElementById('e-pay').textContent='';
+    var btn=document.getElementById('pay-submit');
+    btn.textContent='در حال پردازش...';btn.disabled=true;
+    setTimeout(function(){
+      try{
+        var cart=App.getCart(),st=subtotal(),sc=shipCost(),da=discAmount();
+        var now=new Date(),pDate=now.toLocaleDateString('fa-IR');
+        var user=App.getCurrentUser();
+        var addrId=null;
+        try{var r=document.querySelector('input[name="savedAddr"]:checked');addrId=null;}catch(e){}
+        try{if(user)addrId=localStorage.getItem('as_selected_address_'+user.id);}catch(e){}
+        var m=method();
+        var order={
+          id:App.generateOrderId(),date:pDate,status:'pending',statusText:'در انتظار پرداخت',
+          total:Math.max(0,st+sc-da),
+          discountCode:discount.code||undefined,
+          itemsCount:cart.reduce(function(s,i){return s+i.quantity;},0),
+          items:cart.map(function(item){return{productId:item.id,name:item.name,price:item.price,quantity:item.quantity};}),
+          shipping:sc,discount:0,
+          timeline:[
+            {step:'ثبت سفارش',date:pDate+' - '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),done:true},
+            {step:'تأیید پرداخت',date:'—',done:false},
+            {step:'در حال پردازش',date:'—',done:false},
+            {step:'تحویل به پست',date:'—',done:false},
+            {step:'تحویل شده',date:'—',done:false}
+          ],
+          address:(d.province?' '+d.province:'')+(d.city?'، '+d.city:'')+(d.address?'، '+d.address:'')+(d.postalCode?' — کدپستی: '+d.postalCode:'')||'آدرس ثبت‌شده در فرم',
+          addressId:addrId?(isNaN(Number(addrId))?addrId:Number(addrId)):null,
+          paymentMethod:sel.value,
+          cardId:sel.value==='card'?(cardId!=null?Number(cardId):cardId):null,
+          // رسید واریز: only attached once the server has actually stored it.
+          cardReceiptUrl:sel.value==='card'&&receiptMeta&&receiptMeta.url?receiptMeta.url:null,
+          cardReceiptName:receiptMeta?receiptMeta.name:undefined,
+          cardReceiptSize:receiptMeta?receiptMeta.size:undefined
+        };
+        App.createOrder(order).then(function(saved){
+          order=(saved&&saved.id)?saved:order;
+          App.clearCart();
+          try{App.showToast('سفارش شما با موفقیت ثبت شد! شماره سفارش: '+order.id,'success');}catch(e){}
+          btn.textContent='پرداخت و ثبت سفارش';btn.disabled=false;
+          setTimeout(function(){location.href='/account/orders/'+encodeURIComponent(order.id);},1500);
+        }).catch(function(err){
+          btn.textContent='پرداخت و ثبت سفارش';btn.disabled=false;
+          try{App.showToast((err&&err.message)||'خطا در ثبت سفارش.','error');}catch(e){}
+        });
+      }catch(err){
+        btn.textContent='پرداخت و ثبت سفارش';btn.disabled=false;
+      }
+    },2000);
+  });
+}
+/* Same cart-sync protection as checkout.js: wait for server sync, restore a
+   valid local cart if a stale server response wiped it. */
+function start(){
+  try{
+    if(App.isLoggedIn()&&typeof App.fetchCart==='function'){
+      var snap=App.getCart().slice(),done=false;
+      function restore(){
+        /* addToCart needs the catalog (async); wait for it before restoring. */
+        function doRestore(){
+          try{
+            if(App.getCart().length===0&&snap.length>0){
+              snap.forEach(function(it){
+                try{App.addToCart(it.id,it.pricingMode);
+                  var need=(parseInt(it.quantity,10)||1)-1;
+                  if(need>0)App.updateCartQty(it.key||(it.id+'_'+(it.pricingMode||'retail')),need);
+                }catch(e){}
+              });
+            }
+          }catch(e){}
+          if(guards())boot();
+        }
+        try{
+          var hasCatalog=typeof AppData!=='undefined'&&AppData.products&&AppData.products.length>0;
+          if(hasCatalog||App.getCart().length>0||snap.length===0){doRestore();return;}
+          var waited=false;
+          function ready(){if(waited)return;waited=true;doRestore();}
+          document.addEventListener('camzy:catalog-updated',ready,{once:true});
+          setTimeout(ready,4000);
+        }catch(e){doRestore();}
+      }
+      function settled(){
+        if(done)return;done=true;
+        restore();
+      }
+      App.fetchCart().then(settled,settled);
+      setTimeout(settled,6000);
+      return;
+    }
+  }catch(e){}
+  if(guards())boot();
+}
+Promise.all([
+  fetch('/api/settings').then(function(r){return r.json();}).catch(function(){return null;}),
+  fetch('/api/shipping-methods').then(function(r){return r.json();}).catch(function(){return[];}),
+  fetch('/api/bank-cards').then(function(r){return r.json();}).catch(function(){return[];})
+]).then(function(parts){
+  var s=parts[0],ms=parts[1],bcs=parts[2];
+  if(Array.isArray(bcs)&&bcs.length) Cards=bcs;
+  if(s){
+    Settings.cost=parseNum(s['ship.cost'],Settings.cost);
+    Settings.freeFrom=parseNum(s['ship.free_from'],Settings.freeFrom);
+    Settings.method=String(s['ship.method']||'');
+    Settings.payOnline=String(s['pay.online'])!=='0';
+    Settings.payCod=String(s['pay.cod'])==='1';
+    Settings.payCard=String(s['pay.card'])!=='0';
+    // Per-method titles/descriptions (admin → روش‌های خرید). Fall back to built-ins.
+    ['online','cod','card'].forEach(function(m){
+      if(s['pay.'+m+'.title']!==undefined&&String(s['pay.'+m+'.title']).trim())Settings.payTitle[m]=String(s['pay.'+m+'.title']).trim();
+      if(s['pay.'+m+'.desc']!==undefined)Settings.payDesc[m]=String(s['pay.'+m+'.desc']);
+    });
+    // Cache purchase settings for the guest-checkout guard (server re-validates).
+    try{
+      var psCache={
+        maxQty:Math.max(0,Math.round(Number(String(s['order.max_qty']||'0').replace(/[^\d.-]/g,''))||0)),
+        allowQtyEdit:String(s['order.allow_qty_edit']!=='0'?(s['order.allow_qty_edit']??'1'):'0')==='1',
+        allowGuest:String(s['order.allow_guest']!=='0'?(s['order.allow_guest']??'1'):'0')==='1'
+      };
+      // Normalize: missing keys default to enabled.
+      if(s['order.allow_qty_edit']===undefined) psCache.allowQtyEdit=true;
+      if(s['order.allow_guest']===undefined) psCache.allowGuest=true;
+      localStorage.setItem('as_purchase_settings',JSON.stringify(psCache));
+    }catch(e){}
+  }
+  if(Array.isArray(ms)&&ms.length){
+    Methods=ms.map(function(m){return{id:m.id,name:m.name,description:m.description||'',cost:Math.max(0,Math.round(Number(m.cost)||0)),isDefault:!!m.isDefault};});
+  }else{
+    Methods=[
+      {id:'normal',name:'ارسال عادی',description:'تحویل ۳ تا ۵ روز کاری',cost:0,isDefault:true},
+      {id:'express',name:'ارسال سریع',description:'تحویل ۱ تا ۲ روز کاری',cost:Settings.cost,isDefault:false}
+    ];
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+}).catch(function(){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();});
+})();
+</script>
+</body>
+</html>

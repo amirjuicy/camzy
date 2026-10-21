@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html><html><head><meta charset="utf-8"><title>visual audit</title></head><body style="margin:0;background:#161616;color:#ccc;font:12px monospace">
+<div id="st" style="padding:6px;color:#9f9">running…</div>
+<pre id="out" style="background:#000;padding:8px;max-height:340px;overflow:auto;white-space:pre-wrap"></pre>
+<script>
+const PAGES=['/index.html','/shop.html','/product.html?slug=bosch-gbh-2-26','/account-cart.html'];
+const WIDTHS=[375,430,1024,1280,1440];
+window.__done=false;
+function load(url,w,h){return new Promise(res=>{const f=document.createElement('iframe');
+ f.style.cssText='position:absolute;left:-12000px;top:0;width:'+w+'px;height:'+h+'px;border:0;background:#fff';
+ let fin=false;const done=()=>{if(fin)return;fin=true;res(f)};f.onload=()=>setTimeout(done,1100);setTimeout(done,7000);
+ document.body.appendChild(f);f.src=url;});}
+function px(v){return v===undefined?'-':Math.round(parseFloat(v))}
+function probe(doc){
+  const o={};
+  const q=(s,r)=>{const e=doc.querySelector(s);return e?(r?getComputedStyle(e)[r]:e):null};
+  const cs=e=>e?getComputedStyle(e):null;
+  const hdr=cs(q('.site-header'));const nav=cs(q('.site-nav'));
+  const srch=cs(q('.header-search .search-input-wrapper')||q('.search-input-wrapper'));
+  const logo=cs(q('.header-logo img,.header-logo svg,.header-logo'));
+  const mh=cs(q('.mobile-header'));
+  o.chrome={vw:doc.documentElement.clientWidth,
+    desktopH:hdr?hdr.height+' / pos '+hdr.position:'-',
+    navH:nav?nav.height:'-',
+    mobileH:mh?mh.height:'-',
+    searchH:srch?srch.height:'-',searchR:srch?srch.borderRadius:'-',searchBg:srch?srch.backgroundColor:'-',
+    logoW:logo?logo.width:'-',bodyBg:cs(doc.body).backgroundColor};
+  const card=q('.product-card');const ccs=cs(card);
+  if(card){const r=card.getBoundingClientRect();
+    const img=q('.product-card__image');const ics=img?cs(img):null;
+    const t=q('.product-card__title');const tcs=cs(t);
+    const price=q('.product-card__price-current');const pcs=cs(price);
+    const brand=q('.product-card__brand');const bcs=cs(brand);
+    const badge=q('.product-card__badge');const bdcs=badge?cs(badge):null;
+    o.card={w:Math.round(r.width),radius:ccs.borderRadius,border:ccs.border,shadow:ccs.boxShadow.slice(0,40),
+      imgH:img?px(ics.height):'-',imgBg:ics?ics.backgroundColor:'-',imgPad:ics?ics.padding:'-',
+      titleFs:tcs.fontSize,titleLh:tcs.lineHeight,titleClamp:tcs.webkitLineClamp||tcs['-webkit-line-clamp'],
+      priceFs:pcs?pcs.fontSize:'-',priceW:pcs?pcs.fontWeight:'-',brandFs:bcs?bcs.fontSize:'-',brandColor:bcs?bcs.color:'-',
+      badgeBg:bdcs?bdcs.backgroundColor:'-',
+      atc:(()=>{const a=q('.product-card__add-to-cart');const acs=a?cs(a):null;return a?acs.height+'/'+acs.borderRadius+' fs'+acs.fontSize:'-'})()};
+  }
+  const section=q('main section,main .section');const scs=cs(section);
+  o.section={pad:scs?scs.padding:'-',mb:scs?scs.marginBottom:'-'};
+  const h2=doc.querySelector('main h2,.section-title');const hcs=cs(h2);
+  o.h2={fs:hcs?hcs.fontSize:'-',fw:hcs?hcs.fontWeight:'-',mb:hcs?hcs.marginBottom:'-'};
+  const btn=doc.querySelector('.btn-primary');const bt=cs(btn);
+  o.btn={h:bt?bt.height:'-',r:bt?bt.borderRadius:'-',bg:bt?bt.backgroundColor:'-',fs:bt?bt.fontSize:'-'};
+  const pg=doc.querySelector('.pagination');o.pagination=pg?'present':'none';
+  const crumb=doc.querySelector('.breadcrumb,.breadcrumbs');o.breadcrumb=crumb?'present':'none';
+  return o;
+}
+(async()=>{
+  const R={};
+  for(const w of WIDTHS){for(const p of PAGES){
+    const f=await load(p,w,1100);const d=f.contentDocument;
+    if(!R['w'+w])R['w'+w]={};
+    R['w'+w][p]=probe(d);f.remove();
+  }}
+  window.__R=R;window.__done=true;
+  document.getElementById('st').textContent='DONE';
+  const L=[];for(const w of WIDTHS){L.push('── '+w+'px ──');
+    for(const p of PAGES){const o=R['w'+w][p];
+      L.push(p+' '+JSON.stringify(o.chrome));
+      if(o.card)L.push('  card '+JSON.stringify(o.card));
+      L.push('  sec '+JSON.stringify(o.section)+' h2 '+JSON.stringify(o.h2)+' btn '+JSON.stringify(o.btn)+' pag:'+o.pagination+' crumb:'+o.breadcrumb);
+    }}
+  document.getElementById('out').textContent=L.join('\n');
+})();
+</script></body></html>

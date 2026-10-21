@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>ویرایش بصری صفحه</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/favicon-16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="../assets/css/design-system.css">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="assets/css/admin.css">
+<style>
+.pb-topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--color-dark-surface,#1f2937);color:#fff;position:sticky;top:0;z-index:50;flex:0 0 auto}
+.pb-topbar a{color:#fff;text-decoration:none}
+.pb-devices{display:flex;gap:6px;margin-inline-start:auto}
+.pb-devices button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25); border-radius: var(--radius-lg);padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}
+.pb-devices button.is-active{background:#f59e0b;border-color:#f59e0b;color:#1f2937}
+.pb-save{background:#f59e0b;border:none; border-radius: var(--radius-lg);padding:7px 18px;cursor:pointer;font:inherit;font-size:13px;font-weight:700}
+.pb-tools{display:flex;gap:6px}
+.pb-tools button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25); border-radius: var(--radius-lg);padding:6px 12px;cursor:pointer;font:inherit;font-size:14px}
+.pb-tools button:disabled{opacity:.35;cursor:default}
+/* Fixed viewport shell: the page itself never scrolls — only .pb-stage and .pb-side do. */
+html{height:100%;overflow:hidden}
+body.admin-body{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden}
+.pb-layout{display:flex;gap:0;flex:1 1 auto;min-height:0;overflow:hidden}
+.pb-stage{flex:1 1 auto;min-width:0;min-height:0;background:#e5e7eb;padding:20px;display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.pb-frame{width:100%;max-width:1100px;height:100%;background:#fff; border-radius: var(--radius-xl);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.12);transition:max-width .2s}
+.pb-frame iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+.pb-side{width:300px;flex:0 0 auto;min-height:0;background:#fff;border-inline-start:1px solid var(--border,#e5e7eb);padding:16px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.pb-side h2{font-size:15px;margin:0 0 4px}
+.pb-side .pb-hint{font-size:12px;color:var(--text-muted,#6b7280);margin-bottom:12px}
+.pb-field{margin-bottom:12px}
+.pb-field label{display:block;font-size:12px;margin-bottom:4px;color:var(--text-muted,#6b7280)}
+.pb-field textarea{width:100%;min-height:90px;font:inherit}
+.pb-check{display:flex;align-items:center;gap:8px;font-size:13px}
+.pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pb-field input[type="color"]{width:100%;height:34px;padding:2px;border:1px solid var(--border,#e5e7eb); border-radius: var(--radius-lg);background:#fff}
+.pb-field input[type="number"],.pb-field select{width:100%;font:inherit;font-size:13px}
+.pb-sec{font-size:12px;font-weight:700;margin:14px 0 8px;color:var(--text-primary,#111827)}
+.pb-note{font-size:11px;color:var(--text-muted,#6b7280);margin-top:8px}
+.pb-status{font-size:12px;color:var(--text-muted,#6b7280);margin-top:10px}
+.pb-add{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.pb-add button{border:1px solid var(--border,#e5e7eb);background:#f9fafb; border-radius: var(--radius-lg);padding:8px;cursor:pointer;font:inherit;font-size:13px}
+.pb-add button:hover{border-color:#f59e0b}
+/* Stack the panels: preview takes the top slice (scrolls when its content exceeds it),
+   the settings panel takes the rest and scrolls independently. */
+@media (max-width:1024px){.pb-topbar{flex-wrap:wrap}.pb-layout{flex-direction:column}.pb-stage{order:1;flex:0 0 55%;height:55%;padding:12px;overflow-y:auto}.pb-side{order:2;width:100%;flex:1 1 auto;min-height:0;border-top:1px solid var(--border,#e5e7eb)}.pb-frame{max-width:100%}}
+@media (max-width:600px){.pb-topbar{gap:8px;padding:10px 12px}.pb-topbar strong#pb-title{width:100%;font-size:14px}.pb-devices,.pb-tools{width:100%}.pb-devices button,.pb-tools button{flex:1;font-size:12px}.pb-save{width:100%}.pb-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="admin-body">
+<div class="pb-topbar">
+  <a href="index.html#/visual-editor" title="بازگشت">→ بازگشت به ویرایشگر بصری</a>
+  <strong id="pb-title">ویرایش بصری</strong>
+  <div class="pb-devices" role="group" aria-label="پیش‌نمایش دستگاه">
+    <button type="button" data-pb-device="desktop" class="is-active">دسکتاپ</button>
+    <button type="button" data-pb-device="tablet">تبلت</button>
+    <button type="button" data-pb-device="mobile">موبایل</button>
+  </div>
+  <div class="pb-tools" role="group" aria-label="تاریخچه و حذف">
+    <button type="button" id="pb-undo" title="Undo" disabled>↶ Undo</button>
+    <button type="button" id="pb-redo" title="Redo" disabled>↷ Redo</button>
+    <button type="button" id="pb-delete" title="Delete" disabled>🗑 Delete</button>
+  </div>
+  <button type="button" class="pb-save" id="pb-save">ذخیره</button>
+</div>
+<div class="pb-layout">
+  <div class="pb-stage"><div class="pb-frame" id="pb-frame"><iframe id="pb-iframe" title="پیش‌نمایش صفحه"></iframe></div></div>
+  <aside class="pb-side">
+    <h2>افزودن عنصر</h2>
+    <div class="pb-add">
+      <button type="button" data-pb-add="text">متن</button>
+      <button type="button" data-pb-add="image">تصویر</button>
+      <button type="button" data-pb-add="button">دکمه</button>
+      <button type="button" data-pb-add="divider">جداکننده</button>
+      <button type="button" data-pb-add="section-1">سکشن ۱ ستونه</button>
+      <button type="button" data-pb-add="section-2">سکشن ۲ ستونه</button>
+      <button type="button" data-pb-add="section-3">سکشن ۳ ستونه</button>
+    </div>
+    <div class="pb-field"><label for="pb-pos">محل درج</label><select class="input" id="pb-pos"><option value="end">انتهای بدنه (#pg-body)</option><option value="after">بعد از عنصر انتخاب‌شده</option><option value="before">قبل از عنصر انتخاب‌شده</option></select></div>
+    <h2>تنظیمات</h2>
+    <div class="pb-hint" id="pb-hint">روی یک عنصر در پیش‌نمایش کلیک کنید. کشیدن عنصرِ انتخاب‌شده، موقعیت (X/Y) آن را تغییر می‌دهد؛ کشیدن بلوک‌های دیگر ترتیب آن‌ها را عوض می‌کند (Shift+کشیدن = تغییر ترتیب).</div>
+    <div id="pb-panel" style="display:none">
+      <div class="pb-field"><label>عنصر انتخاب‌شده</label><div id="pb-tag" dir="ltr" style="font-size:12px"></div></div>
+      <div class="pb-field" id="pb-row-cols" style="display:none"><label for="pb-cols">تعداد ستون‌های سکشن</label><select class="input" id="pb-cols"><option value="1">۱ ستون</option><option value="2">۲ ستون</option><option value="3">۳ ستون</option></select></div>
+      <div class="pb-field"><label for="pb-text">متن</label><textarea class="input" id="pb-text"></textarea></div>
+      <div class="pb-field" id="pb-row-src" style="display:none"><label for="pb-src">آدرس تصویر (URL)</label><div style="display:flex;gap:6px"><input class="input" id="pb-src" dir="ltr" placeholder="https://…" style="flex:1"><button type="button" id="pb-src-upload" style="white-space:nowrap">آپلود تصویر</button></div><input type="file" id="pb-src-file" accept="image/*" style="display:none"></div>
+      <div class="pb-field" id="pb-row-href" style="display:none"><label for="pb-href">لینک دکمه (URL)</label><input class="input" id="pb-href" dir="ltr" placeholder="https://… یا /page.html?slug=…"></div>
+      <div class="pb-field"><label class="pb-check"><input type="checkbox" id="pb-visible"> نمایش عنصر (قابل مشاهده)</label></div>
+      <div class="pb-sec">استایل ظاهری</div>
+      <div class="pb-field"><label>حالت استایل (دستگاه)</label><div class="pb-add" id="pb-stylemode" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:0">
+        <button type="button" data-pb-stylemode="desktop" class="is-active" style="border-color:#f59e0b">دسکتاپ</button>
+        <button type="button" data-pb-stylemode="tablet">تبلت</button>
+        <button type="button" data-pb-stylemode="mobile">موبایل</button>
+      </div><div class="pb-note" id="pb-stylemode-note">دسکتاپ = استایل اصلی. تبلت/موبایل فقط در صورت مقداردهی جایگزین می‌شوند.</div></div>
+      <div class="pb-grid">
+        <div class="pb-field"><label for="pb-color">رنگ متن</label><input type="color" id="pb-color"></div>
+        <div class="pb-field"><label for="pb-bg">رنگ پس‌زمینه</label><input type="color" id="pb-bg"></div>
+      </div>
+      <div class="pb-field"><label class="pb-check"><input type="checkbox" id="pb-bg-none"> پس‌زمینه شفاف (بدون رنگ)</label></div>
+      <div class="pb-grid">
+        <div class="pb-field"><label for="pb-fs">اندازه فونت (px)</label><input class="input" type="number" id="pb-fs" min="8" max="120" dir="ltr"></div>
+        <div class="pb-field"><label for="pb-fw">وزن فونت</label><select class="input" id="pb-fw"><option value="">پیش‌فرض</option><option value="300">نازک (300)</option><option value="400">معمولی (400)</option><option value="500">متوسط (500)</option><option value="700">ضخیم (700)</option><option value="800">خیلی ضخیم (800)</option></select></div>
+      </div>
+      <div class="pb-field"><label for="pb-align">تراز متن</label><select class="input" id="pb-align"><option value="">پیش‌فرض</option><option value="right">راست</option><option value="center">وسط</option><option value="left">چپ</option><option value="justify">هم‌تراز</option></select></div>
+      <div class="pb-grid">
+        <div class="pb-field"><label for="pb-margin">حاشیه خارجی (px)</label><input class="input" type="number" id="pb-margin" min="0" max="200" dir="ltr"></div>
+        <div class="pb-field"><label for="pb-padding">حاشیه داخلی (px)</label><input class="input" type="number" id="pb-padding" min="0" max="200" dir="ltr"></div>
+      </div>
+      <div class="pb-field"><label for="pb-radius">گردی گوشه (px)</label><input class="input" type="number" id="pb-radius" min="0" max="100" dir="ltr"></div>
+      <div class="pb-sec">موقعیت و ابعاد</div>
+      <div class="pb-grid">
+        <div class="pb-field"><label for="pb-x">X (px / %)</label><input class="input" type="text" id="pb-x" dir="ltr" placeholder="0 یا 50%"></div>
+        <div class="pb-field"><label for="pb-y">Y (px / %)</label><input class="input" type="text" id="pb-y" dir="ltr" placeholder="0 یا 50%"></div>
+      </div>
+      <div class="pb-grid">
+        <div class="pb-field"><label for="pb-w">عرض (px / %)</label><input class="input" type="text" id="pb-w" dir="ltr" placeholder="auto یا 50%"></div>
+        <div class="pb-field"><label for="pb-h">ارتفاع (px / %)</label><input class="input" type="text" id="pb-h" dir="ltr" placeholder="auto یا 50%"></div>
+      </div>
+      <div class="pb-field"><label for="pb-rotate">چرخش (درجه)</label><input class="input" type="number" id="pb-rotate" min="-360" max="360" step="1" dir="ltr"></div>
+      <div class="pb-field"><label class="pb-check"><input type="checkbox" id="pb-aspect"> قفل نسبت ابعاد</label></div>
+      <div class="pb-sec">ترتیب لایه</div>
+      <div class="pb-grid">
+        <div class="pb-field"><button type="button" class="btn btn-secondary" id="pb-layer-front">به 앞으로</button></div>
+        <div class="pb-field"><button type="button" class="btn btn-secondary" id="pb-layer-back">به عقب</button></div>
+      </div>
+      <div class="pb-grid">
+        <div class="pb-field"><button type="button" class="btn btn-secondary" id="pb-layer-forward">یک مرحله جلو</button></div>
+        <div class="pb-field"><button type="button" class="btn btn-secondary" id="pb-layer-backward">یک مرحله عقب</button></div>
+      </div>
+      <div class="pb-note" id="pb-style-note" style="display:none">استایل عنوان صفحه فقط در پیش‌نمایش اعمال می‌شود و ذخیره نمی‌شود.</div>
+    </div>
+    <div class="pb-status" id="pb-status"></div>
+  </aside>
+</div>
+<script>
+(function(){
+  'use strict';
+  var qs=new URLSearchParams(location.search);
+  var slug=(qs.get('slug')||'').trim();
+  var staticFile=(qs.get('file')||'').trim();
+  if(staticFile&&(staticFile.indexOf('/')>-1||staticFile.indexOf('\\')>-1||!/\.html$/i.test(staticFile))) staticFile='';
+  var frame=document.getElementById('pb-frame'), iframe=document.getElementById('pb-iframe');
+  var titleEl=document.getElementById('pb-title'), statusEl=document.getElementById('pb-status');
+  var hintEl=document.getElementById('pb-hint'), panel=document.getElementById('pb-panel');
+  var tagEl=document.getElementById('pb-tag'), textEl=document.getElementById('pb-text'), visEl=document.getElementById('pb-visible');
+  var colorEl=document.getElementById('pb-color'), bgEl=document.getElementById('pb-bg'), bgNoneEl=document.getElementById('pb-bg-none');
+  var fsEl=document.getElementById('pb-fs'), fwEl=document.getElementById('pb-fw'), alignEl=document.getElementById('pb-align');
+  var marginEl=document.getElementById('pb-margin'), padEl=document.getElementById('pb-padding'), radiusEl=document.getElementById('pb-radius');
+  var xEl=document.getElementById('pb-x'), yEl=document.getElementById('pb-y'), wEl=document.getElementById('pb-w'), hEl=document.getElementById('pb-h');
+  var rotateEl=document.getElementById('pb-rotate'), aspectEl=document.getElementById('pb-aspect');
+  var layerFrontBtn=document.getElementById('pb-layer-front'), layerBackBtn=document.getElementById('pb-layer-back');
+  var layerForwardBtn=document.getElementById('pb-layer-forward'), layerBackwardBtn=document.getElementById('pb-layer-backward');
+  var styleNote=document.getElementById('pb-style-note');
+  var posEl=document.getElementById('pb-pos'), srcRow=document.getElementById('pb-row-src'), srcEl=document.getElementById('pb-src');
+  var hrefRow=document.getElementById('pb-row-href'), hrefEl=document.getElementById('pb-href');
+  var colsRow=document.getElementById('pb-row-cols'), colsEl=document.getElementById('pb-cols');
+  var styleMode='desktop';
+  var PB_T_MAX=900, PB_M_MAX=600;
+  // responsive props with per-device values: font-size, margin, padding, align, visibility, position, size, rotation
+  var RPROPS=[
+    {key:'fs', attr:'data-pb-fs', css:'font-size', unit:'px'},
+    {key:'margin', attr:'data-pb-mg', css:'margin', unit:'px'},
+    {key:'pad', attr:'data-pb-pd', css:'padding', unit:'px'},
+    {key:'align', attr:'data-pb-al', css:'text-align', unit:''},
+    {key:'hide', attr:'data-pb-hd', css:'display', unit:''},
+    {key:'x', attr:'data-pb-x', css:'left', unit:''},
+    {key:'y', attr:'data-pb-y', css:'top', unit:''},
+    {key:'w', attr:'data-pb-w', css:'width', unit:''},
+    {key:'h', attr:'data-pb-h', css:'height', unit:''},
+    {key:'rot', attr:'data-pb-rot', css:'transform', unit:''}
+  ];
+  function ridOf(d,n){
+    var r=n.getAttribute('data-pb-rid');
+    if(!r){ r='pbr'+(++pbUid)+Date.now().toString(36); n.setAttribute('data-pb-rid',r); }
+    return r;
+  }
+  function rGet(n,prop,dev){
+    if(dev==='desktop') return '';
+    return (n.getAttribute(prop.attr+'-'+(dev==='tablet'?'t':'m'))||'');
+  }
+  function rSet(n,prop,dev,val){
+    ridOf(doc(),n);
+    var a=prop.attr+'-'+(dev==='tablet'?'t':'m');
+    if(val===''||val==null) n.removeAttribute(a); else n.setAttribute(a,String(val));
+    refreshRespStyle(doc());
+  }
+  function buildRespCSS(d){
+    var css='';
+    var _zs=pbZones(d), _sel='[data-pb-rid]', _nodes=[]; _zs.forEach(function(z){ Array.prototype.forEach.call(z.querySelectorAll(_sel),function(n){ _nodes.push(n); }); }); var nodes=_nodes;
+    var tRules='', mRules='';
+    Array.prototype.forEach.call(nodes,function(n){
+      var rid=n.getAttribute('data-pb-rid'); if(!rid) return;
+      var sel2='[data-pb-rid="'+rid+'"]';
+      var tD=[], mD=[];
+      RPROPS.forEach(function(p){
+        var t=n.getAttribute(p.attr+'-t')||'', m=n.getAttribute(p.attr+'-m')||'';
+        function decl(v){
+          if(p.key==='hide') return (v==='1')?'display:none !important':'';
+          if(v===''||v==null) return '';
+          // !important is required so a tablet/mobile override beats the desktop inline
+          // style — the rule lives inside its own media query, so desktop is untouched.
+          if(p.key==='fs'||p.key==='margin'||p.key==='pad'){ var num=+v; if(isNaN(num)) return ''; return p.css+':'+num+p.unit+' !important'; }
+          return p.css+':'+v+' !important';
+        }
+        var td=decl(t), md=decl(m);
+        if(td) tD.push(td); if(md) mD.push(md);
+      });
+      if(tD.length) tRules+=sel2+'{'+tD.join(';')+'}';
+      if(mD.length) mRules+=sel2+'{'+mD.join(';')+'}';
+    });
+    if(tRules) css+='@media (max-width:'+PB_T_MAX+'px){'+tRules+'}';
+    if(mRules) css+='@media (max-width:'+PB_M_MAX+'px){'+mRules+'}';
+    return css;
+  }
+  function refreshRespStyle(d){
+    if(!d) return;
+    // Drop embedded copies saved inside the zones: two identical-specificity blocks
+    // (head vs. stale body copy) would fight, and document order would make the stale
+    // one win. One head block is the live source of truth; save() re-embeds a fresh copy.
+    Array.prototype.forEach.call(d.querySelectorAll('style[data-pb-responsive]'),function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
+    var st=d.querySelector('style[data-pb-resp]');
+    if(!st){ st=d.createElement('style'); st.setAttribute('data-pb-resp','1'); d.head.appendChild(st); }
+    st.textContent=buildRespCSS(d);
+  }
+  var pbUid=0;
+  var sel=null, pageTitle='', syncing=false;
+  // ── Independent scrolling is handled purely in CSS (fixed-height flex shell with
+  //    overflow + overscroll-behavior on .pb-stage and .pb-side); no JS scroll patching. ──
+  // ── Undo/Redo/Delete (snapshot history of builder zones) ──
+  var undoBtn=document.getElementById('pb-undo'), redoBtn=document.getElementById('pb-redo'), delBtn=document.getElementById('pb-delete');
+  var undoStack=[], redoStack=[], restoring=false, histTimer=null, histObs=null;
+  // Selection chrome (outline + data-pb-sel/data-pb-outline/contenteditable/draggable
+  // tweaks from mark()/clearHl()/select()) lives inside the zones' innerHTML, so a
+  // raw innerHTML snapshot would treat "selected vs unselected" as a content change:
+  // mere selection would push history + wipe redo, and the async observer delivery
+  // after histRestore would push the restored selection back and wipe redo again
+  // (Redo never staying enabled). Normalise snapshots so history is selection-agnostic.
+  function histCleanClone(zone){
+    var c=zone.cloneNode(true);
+    try{
+      Array.prototype.forEach.call(c.querySelectorAll('[data-pb-drop]'),function(n){ if(n.parentNode) n.parentNode.removeChild(n); });
+      var all=[c];
+      Array.prototype.forEach.call(c.querySelectorAll('*'),function(n){ all.push(n); });
+      all.forEach(function(n){
+        if(!n||!n.setAttribute) return;
+        try{
+          if(n.hasAttribute&&n.hasAttribute('data-pb-sel')){
+            var orig=n.getAttribute('data-pb-outline');
+            try{
+              n.style.outline=(orig==null)?'':orig;
+              n.style.outlineOffset='';
+              if(n.getAttribute('style')==='') n.removeAttribute('style');
+            }catch(_){}
+            n.removeAttribute('data-pb-sel');
+          }
+          if(n.hasAttribute&&n.hasAttribute('data-pb-outline')) n.removeAttribute('data-pb-outline');
+          if(n.hasAttribute&&n.hasAttribute('contenteditable')) n.removeAttribute('contenteditable');
+          if(n.hasAttribute&&n.hasAttribute('draggable')) n.removeAttribute('draggable');
+          if(n.classList){
+            n.classList.remove('pb-dragging'); n.classList.remove('pb-moving');
+            if(n.getAttribute('class')==='') n.removeAttribute('class');
+          }
+        }catch(_){}
+      });
+    }catch(_){}
+    return c.innerHTML;
+  }
+  function snapZones(){
+    try{
+      var d=doc();
+      var zones=pbZones(d);
+      return zones.map(function(z){ return histCleanClone(z); });
+    }catch(_){ return null; }
+  }
+  function histUpdateUI(){
+    if(undoBtn) undoBtn.disabled=!(undoStack.length>1);
+    if(redoBtn) redoBtn.disabled=!(redoStack.length>0);
+    if(delBtn) delBtn.disabled=!sel;
+  }
+  function histPush(){
+    if(restoring) return;
+    var s=snapZones();
+    if(!s) return;
+    var last=undoStack[undoStack.length-1];
+    if(last&&last.join('\u0000')===s.join('\u0000')) return;
+    undoStack.push(s);
+    if(undoStack.length>100) undoStack.shift();
+    redoStack=[];
+    histUpdateUI();
+  }
+  function histPushDebounced(){ clearTimeout(histTimer); histTimer=setTimeout(histPush,300); }
+  // Slideshow runtime (e.g. #hero-slideshow toggling .is-active / aria-selected on a
+  // timer) and builder selection chrome are NOT content changes — ignoring them keeps
+  // history from tracking slideshow ticks, wiping the redo stack, and restoring stale
+  // slide states that detach the slideshow's live nodes and overlap slides.
+  function histIsIgnorable(m){
+    try{
+      var t=m.target;
+      if(m.type==='attributes'){
+        var an=m.attributeName;
+        if(an==='data-pb-sel'||an==='data-pb-outline'||an==='draggable'||an==='contenteditable') return true;
+        if(t&&t.nodeType===1&&(an==='class'||an==='aria-selected')){
+          if(t.classList&&t.classList.contains('pb-dragging')) return true;
+          if(t.id==='hero-slideshow'||(t.closest&&t.closest('#hero-slideshow'))) return true;
+        }
+        return false;
+      }
+      if(m.type==='childList'){
+        var nodes=[], i;
+        for(i=0;i<m.addedNodes.length;i++) nodes.push(m.addedNodes[i]);
+        for(i=0;i<m.removedNodes.length;i++) nodes.push(m.removedNodes[i]);
+        if(nodes.length){
+          for(i=0;i<nodes.length;i++){
+            var n=nodes[i];
+            if(!n||n.nodeType!==1||!n.hasAttribute||!n.hasAttribute('data-pb-drop')) return false;
+          }
+          return true;
+        }
+        return false;
+      }
+      return false;
+    }catch(_){ return false; }
+  }
+  function histObserve(){
+    try{
+      if(histObs) histObs.disconnect();
+      var d=doc();
+      var zones=pbZones(d);
+      if(!zones.length) return;
+      histObs=new MutationObserver(function(muts){
+        if(restoring) return;
+        for(var i=0;i<muts.length;i++){ if(!histIsIgnorable(muts[i])){ histPushDebounced(); return; } }
+      });
+      zones.forEach(function(z){ histObs.observe(z,{childList:true,attributes:true,characterData:true,subtree:true}); });
+    }catch(_){}
+  }
+  function histRestore(snap){
+    var d=doc();
+    var zones=pbZones(d);
+    if(!snap||snap.length!==zones.length) return false;
+    restoring=true;
+    try{
+      clearTimeout(histTimer);
+      if(histObs) histObs.disconnect();
+      // remember selection by data-pb-id
+      var selId=(sel&&sel.getAttribute)?sel.getAttribute('data-pb-id'):null;
+      zones.forEach(function(z,i){ z.innerHTML=snap[i]; });
+      // listeners were lost with innerHTML — rewire
+      try{ d.documentElement.removeAttribute('data-pb-bound'); }catch(_){}
+      Array.prototype.forEach.call(d.querySelectorAll('[data-pb-drag]'),function(n){ n.removeAttribute('data-pb-drag'); });
+      Array.prototype.forEach.call(d.querySelectorAll('[data-pb-coldrop]'),function(n){ n.removeAttribute('data-pb-coldrop'); });
+      Array.prototype.forEach.call(d.querySelectorAll('[draggable]'),function(n){ n.removeAttribute('draggable'); });
+      bind(d);
+      // Select while the observer is still disconnected: selection chrome
+      // (outline etc.) must never be observed as a content change, otherwise its
+      // async delivery after restoring=false would push + wipe the redo stack.
+      var target=null;
+      if(selId){ try{ target=d.querySelector('[data-pb-id="'+selId+'"]'); }catch(_){ target=null; } }
+      select(target);
+      refreshRespStyle(d);
+      clearTimeout(histTimer);
+      histObserve();
+      histUpdateUI();
+      return true;
+    }finally{ restoring=false; }
+  }
+  function doUndo(){
+    if(undoStack.length<2||restoring) return;
+    try{
+      var d=doc();
+      var cur=snapZones();
+      // sync current state if observer debounce hasn't pushed it yet
+      var top=undoStack[undoStack.length-1];
+      if(cur&&top&&cur.join('\u0000')!==top.join('\u0000')){ undoStack.push(cur); top=cur; }
+      if(undoStack.length<2){ histUpdateUI(); return; }
+      var now=undoStack.pop();
+      redoStack.push(now);
+      var prev=undoStack[undoStack.length-1];
+      histRestore(prev);
+      statusEl.textContent='برگردانده شد — برای ذخیره، «ذخیره» را بزنید.';
+    }catch(_){}
+  }
+  function doRedo(){
+    if(!redoStack.length||restoring) return;
+    var nxt=redoStack.pop();
+    undoStack.push(nxt);
+    histRestore(nxt);
+    statusEl.textContent='جلو برده شد — برای ذخیره، «ذخیره» را بزنید.';
+  }
+  function doDelete(){
+    if(!sel) return;
+    try{
+      var d=doc();
+      var zones=pbZones(d);
+      // never delete a whole zone root itself
+      if(zones.indexOf(sel)>-1){ statusEl.textContent='نمی‌توان بدنه اصلی را حذف کرد.'; return; }
+      if(!sel.parentNode){ select(null); return; }
+      sel.parentNode.removeChild(sel);
+      select(null);
+      refreshRespStyle(d);
+      histPush();
+      statusEl.textContent='عنصر حذف شد — برای ذخیره، «ذخیره» را بزنید.';
+    }catch(_){ statusEl.textContent='خطا در حذف عنصر.'; }
+  }
+  if(undoBtn) undoBtn.addEventListener('click',doUndo);
+  if(redoBtn) redoBtn.addEventListener('click',doRedo);
+  if(delBtn) delBtn.addEventListener('click',doDelete);
+  function tok(){ try{var s=JSON.parse(localStorage.getItem('as_admin_session')||'null');return s&&s.token||'';}catch(e){return '';} }
+  // auth guard (same as admin panel — do not change auth logic)
+  try{var s=JSON.parse(localStorage.getItem('as_admin_session')||'null');if(!s||!s.token){location.replace('/login.html');return;}}catch(e){location.replace('/login.html');return;}
+  if(!slug&&!staticFile){ statusEl.textContent='نامک صفحه مشخص نشده است.'; return; }
+  titleEl.textContent='ویرایش بصری: '+(staticFile||slug);
+  iframe.src=staticFile?'../'+staticFile:'../page.html?slug='+encodeURIComponent(slug);
+  function doc(){ return iframe.contentDocument||iframe.contentWindow.document; }
+  function pbBody(d){ return d.getElementById('pg-body')||d.querySelector('[data-cms-page-body]')||d.querySelector('main'); }
+  function pbTopChild(body,n){ if(!n||!body||n===body) return null; while(n&&n.parentNode&&n.parentNode!==body) n=n.parentNode; return (n&&n.parentNode===body)?n:null; }
+  function pbHeader(d){ var h=d.getElementById('site-header'); if(h&&h.innerHTML.trim()) return h; return d.querySelector('header.site-header'); }
+  function pbFooter(d){ var f=d.getElementById('site-footer'); if(f&&f.innerHTML.trim()) return f; return d.querySelector('footer.site-footer'); }
+  function pbZones(d){ var z=[],h=pbHeader(d),b=pbBody(d),f=pbFooter(d); if(h)z.push(h); if(b)z.push(b); if(f&&f!==h&&f!==b)z.push(f); return z; }
+  function pbZoneOf(d,n){ if(!n||n.nodeType!==1) return null; var z=pbZones(d); for(var i=0;i<z.length;i++){ if(z[i]===n||z[i].contains(n)) return z[i]; } return null; }
+  function clearHl(d){ Array.prototype.forEach.call(d.querySelectorAll('[data-pb-sel]'),function(n){n.removeAttribute('data-pb-sel');n.style.outline=n.hasAttribute('data-pb-outline')?n.getAttribute('data-pb-outline'):'';n.style.outlineOffset='';n.removeAttribute('data-pb-outline');}); try{ Array.prototype.forEach.call(d.querySelectorAll('[contenteditable="true"]'),function(x){ x.setAttribute('contenteditable','false'); }); Array.prototype.forEach.call(d.querySelectorAll('[data-pb-drag]'),function(x){ if(!x.hasAttribute('draggable')||x.getAttribute('draggable')!=='true') x.setAttribute('draggable','true'); }); }catch(_){} }
+  function mark(n){ if(!n.hasAttribute('data-pb-outline')) n.setAttribute('data-pb-outline',n.style.outline||''); n.setAttribute('data-pb-sel','1'); n.style.outline='2px solid #f59e0b'; n.style.outlineOffset='2px'; }
+  function isTitle(n){ return n&&n.id==='pg-title'; }
+  function rgbToHex(c){ var m=/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i.exec(c||''); if(!m) return '#000000'; function h(x){var s=(+x).toString(16);return s.length<2?'0'+s:s;} return '#'+h(m[1])+h(m[2])+h(m[3]); }
+  function pxNum(v){ var m=/^(-?\d+(?:\.\d+)?)px$/i.exec((v||'').trim()); return m?Math.round(+m[1]):''; }
+  function editableRoots(d){
+    var roots=pbZones(d);
+    var h=d.getElementById('pg-title'); if(h&&roots.indexOf(h)===-1) roots.unshift(h);
+    return roots;
+  }
+  function isSection(n){ return n&&n.hasAttribute&&n.hasAttribute('data-pb-sec'); }
+  function isCol(n){ return n&&n.hasAttribute&&n.hasAttribute('data-pb-col'); }
+  function closestSec(n){ return n&&n.closest?n.closest('[data-pb-sec]'):null; }
+  function closestCol(n){ return n&&n.closest?n.closest('[data-pb-col]'):null; }
+  function collect(d){
+    var out=[],i=0;
+    editableRoots(d).forEach(function(root){
+      if(!root.hasAttribute('data-pb-id')) root.setAttribute('data-pb-id','pb-'+(i++));
+      out.push(root);
+      var nodes=root.querySelectorAll('h1,h2,h3,h4,p,li,span,a,strong,em,blockquote,img,button,hr,[data-pb-sec],[data-pb-col]');
+      Array.prototype.forEach.call(nodes,function(n){
+        var t=n.tagName;
+        if(t==='IMG'||t==='HR'||t==='BUTTON'||isSection(n)||isCol(n)||n.textContent.trim()){ if(!n.hasAttribute('data-pb-id')) n.setAttribute('data-pb-id','pb-'+(i++)); out.push(n); }
+      });
+    });
+    return out;
+  }
+  function pbSelSelector(){ return 'h1,h2,h3,h4,p,li,span,a,strong,em,blockquote,img,button,hr,[data-pb-sec],[data-pb-col]'; }
+  function isSelectableNode(n){
+    if(!n||n.nodeType!==1) return false;
+    if(n.hasAttribute('data-pb-drop')) return false;
+    if(n.tagName==='HTML'||n.tagName==='HEAD'||n.tagName==='BODY'||n.tagName==='STYLE'||n.tagName==='SCRIPT') return false;
+    if(isSection(n)||isCol(n)) return true;
+    try{ if(n.matches&&n.matches(pbSelSelector())) return true; }catch(_){}
+    return false;
+  }
+  function resolveSelectable(d,t){
+    // Exact element clicked — never auto-switch to a parent when the clicked node itself is selectable.
+    if(t&&t.nodeType===3) t=t.parentNode;
+    if(isSelectableNode(t)) return t;
+    if(t&&t.nodeType===1&&t.closest){
+      try{
+        var c=t.closest(pbSelSelector()+',[data-pb-id]');
+        if(c&&isSelectableNode(c)) return c;
+      }catch(_){}
+    }
+    return null;
+  }
+  function wireNode(d,n){
+    if(!n.hasAttribute('data-pb-id')) n.setAttribute('data-pb-id','pb-new-'+(++pbUid)+'-'+Date.now().toString(36));
+    bindDragOne(d,n);
+    // nested selectables need ids + drag only — clicks are handled by one delegated listener (exact target)
+    Array.prototype.forEach.call(n.querySelectorAll('h1,h2,h3,h4,p,li,span,a,strong,em,blockquote,img,button,hr,[data-pb-sec],[data-pb-col]'),function(c){ if(!c.hasAttribute('data-pb-id')){c.setAttribute('data-pb-id','pb-new-'+(++pbUid)); bindDragOne(d,c);} });
+    bindColContainer(d,n);
+  }
+  function bindDragOne(d,n){
+    if(n.nodeType!==1||n.hasAttribute('data-pb-drop')||n.hasAttribute('data-pb-drag')) return;
+    n.setAttribute('data-pb-drag','1');
+    n.draggable=true;
+    n.addEventListener('dragstart',function(e){
+      dragEl=n;
+      try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain','pb'); }catch(_){}
+      setTimeout(function(){ n.classList.add('pb-dragging'); },0);
+    });
+    n.addEventListener('dragend',function(){
+      n.classList.remove('pb-dragging');
+      clearDropMarker(d);
+      dragEl=null;
+    });
+    n.addEventListener('dragover',function(e){
+      if(!dragEl||dragEl.parentNode!==n.parentNode||n===dragEl) return;
+      if(pbZoneOf(d,dragEl)!==pbZoneOf(d,n)) return;
+      e.preventDefault();
+      try{ e.dataTransfer.dropEffect='move'; }catch(_){}
+      var m=dropMarker(d);
+      var r=n.getBoundingClientRect();
+      var after=(e.clientY-r.top)>r.height/2;
+      if(after){ if(n.nextSibling!==m) n.parentNode.insertBefore(m,n.nextSibling); }
+      else{ if(n.previousSibling!==m) n.parentNode.insertBefore(m,n); }
+    });
+    n.addEventListener('drop',function(e){
+      if(!dragEl||dragEl.parentNode!==n.parentNode) return;
+      if(pbZoneOf(d,dragEl)!==pbZoneOf(d,n)) return;
+      e.preventDefault(); e.stopPropagation();
+      var m=d.querySelector('[data-pb-drop]');
+      if(m&&m.parentNode) m.parentNode.insertBefore(dragEl,m);
+      clearDropMarker(d);
+      statusEl.textContent='ترتیب تغییر کرد — برای ذخیره، «ذخیره» را بزنید.';
+      select(dragEl);
+    });
+  }
+  function bindColContainer(d,col){
+    if(!isCol(col)||col.hasAttribute('data-pb-coldrop')) return;
+    col.setAttribute('data-pb-coldrop','1');
+    col.addEventListener('dragover',function(e){
+      if(!dragEl) return;
+      if(pbZoneOf(d,dragEl)!==pbZoneOf(d,col)) return;
+      // allow drop into empty column, or appending at end of column
+      if(col.children.length===0||e.target===col){ e.preventDefault(); }
+    });
+    col.addEventListener('drop',function(e){
+      if(!dragEl) return;
+      if(pbZoneOf(d,dragEl)!==pbZoneOf(d,col)) return;
+      if(col.children.length===0||e.target===col){
+        e.preventDefault(); e.stopPropagation();
+        col.appendChild(dragEl);
+        clearDropMarker(d);
+        statusEl.textContent='ترتیب تغییر کرد — برای ذخیره، «ذخیره» را بزنید.';
+        select(dragEl);
+      }
+    });
+  }
+  var dragEl=null;
+  function dropMarker(d){
+    var m=d.querySelector('[data-pb-drop]');
+    if(m) return m;
+    m=d.createElement('div'); m.setAttribute('data-pb-drop','1'); m.setAttribute('contenteditable','false');
+    return m;
+  }
+  function clearDropMarker(d){ var m=d.querySelector('[data-pb-drop]'); if(m&&m.parentNode) m.parentNode.removeChild(m); }
+  function onPreviewClick(e){
+    // Single delegated handler: the exact clicked element is selected.
+    // A parent is used only when the clicked node itself is not selectable/editable.
+    try{
+      var d=doc();
+      var t=resolveSelectable(d,e.target);
+      if(t){ e.preventDefault(); e.stopPropagation(); select(t); return; }
+      e.preventDefault(); e.stopPropagation(); select(null);
+    }catch(_){}
+  }
+  function bind(d){
+    if(d.documentElement.hasAttribute('data-pb-bound')) return;
+    d.documentElement.setAttribute('data-pb-bound','1');
+    var st=d.querySelector('style[data-pb-style]');
+    if(!st){ st=d.createElement('style'); st.setAttribute('data-pb-style','1'); d.head.appendChild(st); }
+    st.textContent='[data-pb-id]{cursor:pointer}[data-pb-id]:hover{outline:1px dashed #f59e0b;outline-offset:2px}'
+      +'[data-pb-drag]{cursor:move}[data-pb-drag].pb-dragging{opacity:.45}.pb-moving{cursor:move}'
+      +'[data-pb-drop]{height:0;border-top:3px solid #f59e0b;margin:4px 0}'
+      +'[data-pb-sec]{display:flex;gap:12px;padding:8px;border:1px dashed #d1d5db;border-radius:var(--radius-lg);margin:8px 0}'
+      +'[data-pb-col]{flex:1;min-height:48px;min-width:0;padding:8px;border:1px dashed #e5e7eb;border-radius:var(--radius-md)}';
+    collect(d);
+    // document-level listeners attach exactly once (histRestore re-runs bind() after
+    // swapping innerHTML — re-adding them would double-fire handlers)
+    if(!d.documentElement.hasAttribute('data-pb-listeners')){
+      d.documentElement.setAttribute('data-pb-listeners','1');
+      d.addEventListener('click',onPreviewClick,true);
+      // inline typing in the preview syncs back to the settings textarea
+      d.addEventListener('input',function(e){
+        try{
+          if(!sel||syncing||!isTextEditable(sel)) return;
+          var t=e.target;
+          if(t==null) return;
+          if(t===sel||(sel.contains&&sel.contains(t))){
+            syncing=true;
+            try{ textEl.value=sel.textContent.trim(); tagEl.textContent=label(sel); }
+            finally{ syncing=false; }
+          }
+        }catch(_){}
+      },true);
+      bindMove(d);
+    }
+    bindReorder(d);
+    refreshRespStyle(d);
+  }
+  function bindReorder(d){
+    var zones=pbZones(d);
+    if(!zones.length) return;
+    dragEl=null;
+    zones.forEach(function(zone){
+      // sections/blocks at zone level + items inside columns (same-parent reorder, zone-local)
+      Array.prototype.forEach.call(zone.querySelectorAll('*'),function(n){ if(n!==zone&&n.parentNode&&(n.parentNode===zone||isCol(n.parentNode))) bindDragOne(d,n); });
+      Array.prototype.forEach.call(zone.children,function(n){
+        bindDragOne(d,n);
+      });
+      Array.prototype.forEach.call(zone.querySelectorAll('[data-pb-col]'),function(c){ bindColContainer(d,c); });
+      // zone-level drop targets attach once (the zone element itself survives innerHTML swaps)
+      if(zone.hasAttribute('data-pb-zbound')) return;
+      zone.setAttribute('data-pb-zbound','1');
+      zone.addEventListener('dragover',function(e){
+        if(!dragEl||dragEl.parentNode!==zone) return;
+        if(pbZoneOf(d,dragEl)!==zone) return;
+        if(zone.children.length===0||(zone.children.length===1&&zone.children[0]===dragEl)){ e.preventDefault(); }
+      });
+      zone.addEventListener('drop',function(e){
+        if(!dragEl||dragEl.parentNode!==zone) return;
+        if(pbZoneOf(d,dragEl)!==zone) return;
+        var m=d.querySelector('[data-pb-drop]');
+        if(m&&m.parentNode){ e.preventDefault(); m.parentNode.insertBefore(dragEl,m); }
+        clearDropMarker(d);
+        statusEl.textContent='ترتیب تغییر کرد — برای ذخیره، «ذخیره» را بزنید.';
+        select(dragEl);
+      });
+    });
+  }
+  function label(n){
+    if(isSection(n)) return '<section> '+n.querySelectorAll('[data-pb-col]').length+' ستون';
+    if(isCol(n)) return '<column> '+(n.textContent||'').trim().replace(/\s+/g,' ').slice(0,40);
+    var t=(n.textContent||'').trim().replace(/\s+/g,' ').slice(0,60);
+    return '<'+n.tagName.toLowerCase()+'> '+t;
+  }
+  function isTextEditable(n){
+    if(!n||n.nodeType!==1) return false;
+    var tn=n.tagName;
+    if(tn==='IMG'||tn==='HR') return false;
+    if(isSection(n)||isCol(n)) return false;
+    if(tn==='INPUT'||tn==='TEXTAREA'||tn==='SELECT') return false;
+    return true;
+  }
+  function select(n){
+    var d=doc(); clearHl(d); sel=n;
+    try{
+      Array.prototype.forEach.call(d.querySelectorAll('[contenteditable="true"]'),function(x){ x.setAttribute('contenteditable','false'); });
+    }catch(_){}
+    if(!n){ panel.style.display='none'; hintEl.style.display=''; histUpdateUI(); return; }
+    mark(n); panel.style.display=''; hintEl.style.display='none';
+    if(isTextEditable(n)){ try{ n.setAttribute('contenteditable','true'); n.setAttribute('draggable','false'); }catch(_){} }
+    syncing=true;
+    try{
+      tagEl.textContent=label(n);
+      var sec=isSection(n), col=isCol(n);
+      colsRow.style.display=sec?'':'none';
+      if(sec) colsEl.value=String(n.querySelectorAll(':scope > [data-pb-col]').length||n.querySelectorAll('[data-pb-col]').length||1);
+      var tn=n.tagName;
+      var isMedia=(tn==='IMG'||tn==='HR');
+      var isLayout=(sec||col);
+      textEl.value=(isMedia||isLayout)?'':n.textContent.trim();
+      textEl.disabled=!isTextEditable(n);
+      textEl.placeholder=isMedia?'این عنصر متن ندارد':(isLayout?'سکشن/ستون متن مستقیم ندارد — عنصر داخل ستون درج کنید':'');
+      srcRow.style.display=(tn==='IMG')?'':'none';
+      hrefRow.style.display=(tn==='A'||tn==='BUTTON')?'':'none';
+      if(tn==='IMG'){ srcEl.value=n.getAttribute('src')||''; }
+      if(tn==='A'||tn==='BUTTON'){ hrefEl.value=n.getAttribute('href')||''; }
+      visEl.checked=n.style.display!=='none'&&!n.hasAttribute('data-pb-hidden');
+      if(styleMode==='desktop'){
+        visEl.checked=n.style.display!=='none'&&!n.hasAttribute('data-pb-hidden');
+      }else{
+        visEl.checked=rGet(n,RPROPS[4],styleMode)!=='1';
+      }
+      // show current styles (computed so inherited/stylesheet values are visible)
+      var cs=doc().defaultView.getComputedStyle(n);
+      colorEl.value=rgbToHex(cs.color);
+      var inlineBg=(n.style.backgroundColor||'').trim();
+      var transparent=/transparent|rgba\(\s*0/.test(inlineBg)||(/^rgba/i.test(cs.backgroundColor||'')&&/,\s*0\s*\)$/.test(cs.backgroundColor||''));
+      bgNoneEl.checked=(inlineBg===''&&transparent)||inlineBg==='transparent';
+      bgEl.value=transparent?'#ffffff':rgbToHex(inlineBg||cs.backgroundColor);
+      fsEl.value=pxNum(cs.fontSize)||'';
+      if(styleMode!=='desktop'){ var _fv=rGet(n,RPROPS[0],styleMode); fsEl.value=_fv===''?'':+_fv; fsEl.placeholder='خالی = حفظ دسکتاپ'; }
+      else fsEl.placeholder='';
+      var w=cs.fontWeight; fwEl.value=(w==='700'||w==='bold')?'700':(w==='300'?'300':(w==='500'?'500':(w==='800'?'800':'400')));
+      if(!n.style.fontWeight) fwEl.value='';
+      alignEl.value=n.style.textAlign||'';
+      if(styleMode!=='desktop'){ alignEl.value=rGet(n,RPROPS[3],styleMode); }
+      marginEl.value=n.style.margin!==''?pxNum(cs.marginTop):'';
+      if(n.style.marginTop) marginEl.value=pxNum(n.style.marginTop);
+      if(styleMode!=='desktop'){ var _mv=rGet(n,RPROPS[1],styleMode); marginEl.value=_mv===''?'':+_mv; marginEl.placeholder='خالی = دسکتاپ'; } else marginEl.placeholder='';
+      padEl.value=n.style.padding!==''||n.style.paddingTop!==''?pxNum(cs.paddingTop):'';
+      if(n.style.paddingTop) padEl.value=pxNum(n.style.paddingTop);
+      if(styleMode!=='desktop'){ var _pv=rGet(n,RPROPS[2],styleMode); padEl.value=_pv===''?'':+_pv; padEl.placeholder='خالی = دسکتاپ'; } else padEl.placeholder='';
+      radiusEl.value=n.style.borderRadius?pxNum(n.style.borderRadius):'';
+      // Position, Size, Rotation — refreshed from the selected object's real state
+      xEl.value=readPos(n,'left');
+      yEl.value=readPos(n,'top');
+      wEl.value=readLen(n,RPROPS[7]);
+      hEl.value=readLen(n,RPROPS[8]);
+      rotateEl.value=readRot(n);
+      aspectEl.checked=n.hasAttribute('data-pb-ar');
+      var _ph=styleMode==='desktop'?'':'خالی = حفظ دسکتاپ';
+      xEl.placeholder=styleMode==='desktop'?'0 یا 50%':_ph;
+      yEl.placeholder=styleMode==='desktop'?'0 یا 50%':_ph;
+      wEl.placeholder=styleMode==='desktop'?'auto یا 50%':_ph;
+      hEl.placeholder=styleMode==='desktop'?'auto یا 50%':_ph;
+      rotateEl.placeholder=_ph;
+      var t=isTitle(n);
+      styleNote.style.display=t?'':'none';
+      [colorEl,bgEl,bgNoneEl,fsEl,fwEl,alignEl,marginEl,padEl,radiusEl].forEach(function(el){el.disabled=t;});
+    }finally{ syncing=false; }
+    histUpdateUI();
+  }
+  textEl.addEventListener('input',function(){
+    if(!sel||syncing||!isTextEditable(sel)) return;
+    // Leaf nodes: direct text replacement. Nodes with child markup: replace
+    // text in place so the edit is immediate while keeping the save minimal.
+    // (Child elements are replaced by the edited text — same as a plain-text edit.)
+    sel.textContent=textEl.value;
+    tagEl.textContent=label(sel);
+  });
+  function live(fn){ return function(){ if(!sel||syncing||isTitle(sel)) return; fn(sel); }; }
+  // responsive-aware handlers: desktop writes inline style, tablet/mobile write data attrs + live style block
+  fsEl.addEventListener('input',live(function(n){
+    if(styleMode==='desktop'){ n.style.fontSize=fsEl.value!==''?Math.max(8,Math.min(120,+fsEl.value))+'px':''; }
+    else rSet(n,RPROPS[0],styleMode,fsEl.value===''? '' : Math.max(8,Math.min(120,+fsEl.value)));
+  }));
+  alignEl.addEventListener('change',live(function(n){
+    if(styleMode==='desktop'){ n.style.textAlign=alignEl.value; }
+    else rSet(n,RPROPS[3],styleMode,alignEl.value);
+  }));
+  marginEl.addEventListener('input',live(function(n){
+    if(styleMode==='desktop'){ n.style.margin=marginEl.value!==''?Math.max(0,Math.min(200,+marginEl.value))+'px':''; }
+    else rSet(n,RPROPS[1],styleMode,marginEl.value===''? '' : Math.max(0,Math.min(200,+marginEl.value)));
+  }));
+  padEl.addEventListener('input',live(function(n){
+    if(styleMode==='desktop'){ n.style.padding=padEl.value!==''?Math.max(0,Math.min(200,+padEl.value))+'px':''; }
+    else rSet(n,RPROPS[2],styleMode,padEl.value===''? '' : Math.max(0,Math.min(200,+padEl.value)));
+  }));
+  colorEl.addEventListener('input',live(function(n){ n.style.color=colorEl.value; }));
+  bgEl.addEventListener('input',live(function(n){ n.style.backgroundColor=bgEl.value; bgNoneEl.checked=false; }));
+  bgNoneEl.addEventListener('change',live(function(n){ n.style.backgroundColor=bgNoneEl.checked?'transparent':bgEl.value; }));
+  fwEl.addEventListener('change',live(function(n){ n.style.fontWeight=fwEl.value; }));
+  radiusEl.addEventListener('input',live(function(n){ n.style.borderRadius=radiusEl.value!==''?Math.max(0,Math.min(100,+radiusEl.value))+'px':''; }));
+  // ── Position & Size: units, validation, aspect-ratio lock ──
+  // Normalise a length field. Bare numbers are px (fields are labelled "px / %"),
+  // '' clears the property, 'auto' is accepted for width/height. Garbage input
+  // returns {ok:false} so an invalid value can never reach the element.
+  function normLen(v,opts){
+    opts=opts||{};
+    v=String(v==null?'':v).trim().toLowerCase();
+    if(v==='') return {ok:true,v:''};
+    if(v==='auto') return {ok:true,v:opts.auto?'auto':''};
+    var m=/^(-?\d+(?:\.\d+)?)(px|%|rem|em|vw|vh|pt)?$/.exec(v);
+    if(!m) return {ok:false};
+    var n=parseFloat(m[1]);
+    if(!isFinite(n)) return {ok:false};
+    if(opts.min!=null&&n<opts.min) n=opts.min;
+    if(opts.max!=null&&n>opts.max) n=opts.max;
+    if(opts.positive&&n<=0) return {ok:false};
+    return {ok:true,v:n+(m[2]||'px')};
+  }
+  function normDeg(v){
+    var n=parseFloat(v);
+    if(!isFinite(n)) return null;
+    return Math.max(-360,Math.min(360,n));
+  }
+  function cssView(){ try{ return doc().defaultView||window; }catch(_){ return window; } }
+  // containing-block-ish box used for % ↔ px conversion
+  function parentBox(n){
+    var p=(n&&n.parentNode&&n.parentNode.nodeType===1)?n.parentNode:(n&&n.ownerDocument?n.ownerDocument.body:null);
+    var vw=(cssView().innerWidth||1200), vh=(cssView().innerHeight||800);
+    return {w:(p&&p.clientWidth)||vw, h:(p&&p.clientHeight)||vh};
+  }
+  function lenToPx(v,n,axis){
+    var m=/^(-?\d+(?:\.\d+)?)(px|%)?$/.exec(String(v==null?'':v).trim().toLowerCase());
+    if(!m) return null;
+    var num=parseFloat(m[1]);
+    if(!isFinite(num)) return null;
+    if(m[2]==='%'){ var b=parentBox(n); return num*(axis==='h'?b.h:b.w)/100; }
+    return num;
+  }
+  // X/Y on a static element do nothing — promote it to relative once so left/top
+  // take effect in the flow, and drop the promotion when the coordinates are cleared.
+  function ensurePromoted(n){
+    try{
+      var cs=cssView().getComputedStyle(n);
+      if(cs.position==='static'){ n.style.position='relative'; n.setAttribute('data-pb-pprom','1'); }
+    }catch(_){}
+  }
+  function unpromoteIfIdle(n){
+    if(!n||!n.hasAttribute||!n.hasAttribute('data-pb-pprom')) return;
+    if(n.style.left||n.style.top||n.style.right||n.style.bottom) return;
+    var any=['data-pb-x','data-pb-x-t','data-pb-x-m','data-pb-y','data-pb-y-t','data-pb-y-m'].some(function(a){ return n.hasAttribute(a); });
+    if(any) return; // responsive coordinates still need the non-static position
+    n.style.position=''; n.removeAttribute('data-pb-pprom');
+  }
+  function readPos(n,axis){
+    if(styleMode!=='desktop') return rGet(n,axis==='left'?RPROPS[5]:RPROPS[6],styleMode)||'';
+    var inline=n.style[axis];
+    if(inline) return inline;
+    try{
+      var cs=cssView().getComputedStyle(n);
+      if(!cs||cs.position==='static') return '';   // static → no offset, never a fake 0
+      var v=cs[axis];
+      return (!v||v==='auto')?'':v;
+    }catch(_){ return ''; }
+  }
+  function readLen(n,prop){
+    if(styleMode!=='desktop') return rGet(n,prop,styleMode)||'';
+    var inline=n.style[prop.css];
+    if(inline) return inline;
+    try{
+      var cs=cssView().getComputedStyle(n);
+      if(!cs||cs.display==='none') return '';
+      var v=parseFloat(cs[prop.css]);          // class-driven dimensions are still real values
+      if(isFinite(v)&&v>0) return Math.round(v)+'px';
+    }catch(_){}
+    return '';
+  }
+  function readRot(n){
+    var src=(styleMode==='desktop')?(n.style.transform||''):(rGet(n,RPROPS[9],styleMode)||'');
+    var m=/rotate\(\s*(-?[\d.]+)\s*deg\s*\)/i.exec(src||'');
+    return m?String(Math.round(+m[1])):'';
+  }
+  // Replace (or clear) the rotate() part without clobbering other inline transforms.
+  function applyRot(n,deg){
+    var base=n.style.transform||'';
+    var rest=String(base).replace(/rotate\(\s*-?[\d.]+\s*deg\s*\)/gi,' ').replace(/\s+/g,' ').trim();
+    var next=deg?((rest?rest+' ':'')+'rotate('+deg+'deg)'):rest;
+    if(styleMode==='desktop'){ n.style.transform=next; }
+    else rSet(n,RPROPS[9],styleMode,next);
+  }
+  function getAspectRatio(n){
+    var ar=n.getAttribute('data-pb-ar');
+    if(ar){ var f=+ar; if(isFinite(f)&&f>0) return f; }
+    try{
+      var cs=cssView().getComputedStyle(n);
+      var w=parseFloat(cs.width), h=parseFloat(cs.height);
+      if(w>0&&h>0) return w/h;
+    }catch(_){}
+    return null;
+  }
+  // Given the changed side, produce the locked counterpart. Always in px: a % height
+  // against an auto-height parent resolves to "auto" and would silently break the ratio.
+  function aspectCounterpart(n,axis,len,ar){
+    if(!len||!ar||ar<=0) return '';
+    var px=lenToPx(len,n,axis);
+    if(px==null) return '';
+    var oPx=(axis==='w')?(px/ar):(px*ar);
+    return Math.round(oPx)+'px';
+  }
+  // Single writer for X/Y/W/H: validates, writes to the active style source
+  // (inline = desktop, data-attrs = tablet/mobile) and keeps the aspect partner in sync.
+  function writeGeom(n,prop,raw,axis){
+    var isSize=(prop===RPROPS[7]||prop===RPROPS[8]);
+    var r=normLen(raw,{auto:isSize,positive:isSize});
+    if(!r.ok) return false;
+    if(!isSize&&r.v) ensurePromoted(n);
+    var ar=(axis&&aspectEl.checked)?getAspectRatio(n):null;
+    if(styleMode==='desktop'){ n.style[prop.css]=r.v; }
+    else rSet(n,prop,styleMode,r.v);
+    if(!isSize) unpromoteIfIdle(n);
+    if(axis&&ar&&aspectEl.checked){
+      var other=(prop===RPROPS[7])?RPROPS[8]:RPROPS[7];
+      var out=aspectCounterpart(n,axis,r.v,ar);
+      if(styleMode==='desktop') n.style[other.css]=out;
+      else rSet(n,other,styleMode,out);
+      ((other===RPROPS[7])?wEl:hEl).value=out;
+    }
+    return true;
+  }
+  xEl.addEventListener('input',live(function(n){ writeGeom(n,RPROPS[5],xEl.value,null); }));
+  yEl.addEventListener('input',live(function(n){ writeGeom(n,RPROPS[6],yEl.value,null); }));
+  wEl.addEventListener('input',live(function(n){ writeGeom(n,RPROPS[7],wEl.value,'w'); }));
+  hEl.addEventListener('input',live(function(n){ writeGeom(n,RPROPS[8],hEl.value,'h'); }));
+  rotateEl.addEventListener('input',live(function(n){
+    var deg=normDeg(rotateEl.value);
+    if(deg===null){ if(String(rotateEl.value).trim()==='') deg=0; else return; }
+    applyRot(n,deg);
+  }));
+  aspectEl.addEventListener('change',function(){
+    if(!sel||syncing) return;
+    if(aspectEl.checked){
+      var ar=getAspectRatio(sel);
+      if(ar) sel.setAttribute('data-pb-ar',ar.toFixed(4));
+    }else{
+      sel.removeAttribute('data-pb-ar');
+    }
+  });
+  // ── Canvas move-drag ──
+  // Dragging the selected object (or any object that already has coordinates) moves it
+  // and updates the X/Y fields; dragging a non-positioned, unselected element keeps the
+  // existing HTML5 reorder gesture. Deltas use screen coordinates so the parent page and
+  // the iframe document share one coordinate system.
+  var mv=null, mvWatch=null, respRaf=null;
+  function isPositionedEl(n){
+    if(!n||n.nodeType!==1) return false;
+    if(n.style&&(n.style.left||n.style.top)) return true;
+    return ['data-pb-x','data-pb-x-t','data-pb-x-m','data-pb-y','data-pb-y-t','data-pb-y-m'].some(function(a){ return n.hasAttribute(a); });
+  }
+  function scheduleRespRefresh(d){
+    if(respRaf) return;
+    respRaf=(cssView().requestAnimationFrame||function(f){ return setTimeout(f,16); })(function(){ respRaf=null; try{ refreshRespStyle(d); }catch(_){} });
+  }
+  function onMoveDrag(e){
+    if(!mv||!e) return;
+    var dx=e.screenX-mv.sx0, dy=e.screenY-mv.sy0;
+    if(!mv.started){
+      if(Math.abs(dx)<5&&Math.abs(dy)<5) return;
+      mv.started=true;
+      try{
+        if(mv.el!==sel) select(mv.el);
+        if(mv.wasStatic) ensurePromoted(mv.el);
+        var cs=cssView().getComputedStyle(mv.el);
+        mv.baseLeft=lenToPx(cs.left,mv.el,'w')||0;
+        mv.baseTop=lenToPx(cs.top,mv.el,'h')||0;
+        try{ var s=doc().getSelection&&doc().getSelection(); if(s) s.removeAllRanges(); }catch(_){}
+        mv.el.classList.add('pb-moving');
+        mv.el.style.userSelect='none';
+        statusEl.textContent='در حال جابجایی عنصر…';
+      }catch(_){}
+    }
+    var nl=Math.round(mv.baseLeft+dx)+'px', nt=Math.round(mv.baseTop+dy)+'px';
+    try{
+      var el=mv.el;
+      if(styleMode==='desktop'){
+        el.style.left=nl; el.style.top=nt;
+      }else{
+        ridOf(doc(),el);
+        el.setAttribute('data-pb-x-'+(styleMode==='tablet'?'t':'m'),nl);
+        el.setAttribute('data-pb-y-'+(styleMode==='tablet'?'t':'m'),nt);
+        scheduleRespRefresh(doc());
+      }
+      xEl.value=nl; yEl.value=nt;
+    }catch(_){}
+    if(e.cancelable&&e.preventDefault) e.preventDefault();
+  }
+  function endMoveDrag(reason){
+    if(!mv) return;
+    var m=mv; mv=null;
+    clearTimeout(mvWatch);
+    try{
+      m.el.classList.remove('pb-moving');
+      m.el.style.userSelect='';
+      if(m.prevDraggable==null) m.el.removeAttribute('draggable');
+      else m.el.setAttribute('draggable',m.prevDraggable);
+      if(m.started){
+        try{ refreshRespStyle(doc()); }catch(_){}
+        histPush();
+        statusEl.textContent='موقعیت تغییر کرد — برای ذخیره، «ذخیره» را بزنید.';
+      }
+    }catch(_){}
+  }
+  function bindMove(d){
+    if(d.documentElement.hasAttribute('data-pb-movebound')) return;
+    d.documentElement.setAttribute('data-pb-movebound','1');
+    d.addEventListener('pointerdown',function(e){
+      if(e.button!==0||mv) return;
+      try{
+        var t=resolveSelectable(d,e.target);
+        if(e.shiftKey){
+          // Shift + drag = reorder gesture, even while an element is selected
+          if(t) t.setAttribute('draggable','true');
+          return;
+        }
+        var target=null;
+        if(sel&&t&&(t===sel||(sel.contains&&sel.contains(t)))) target=sel;
+        else if(t&&isPositionedEl(t)) target=t;
+        if(!target) return;
+        var cs=cssView().getComputedStyle(target);
+        mv={ sx0:e.screenX, sy0:e.screenY, started:false, el:target,
+             baseLeft:0, baseTop:0, wasStatic:(cs.position==='static'),
+             prevDraggable:target.getAttribute('draggable') };
+        // block the native HTML5 drag for this gesture — plain drag on a selected
+        // (or positioned) object means "move"; Shift+drag keeps "reorder".
+        target.setAttribute('draggable','false');
+        // watchdog: if a pointerup is ever lost (e.g. released outside the window),
+        // reap the gesture so later pointerdowns aren't blocked by a stale mv
+        clearTimeout(mvWatch); mvWatch=setTimeout(function(){ mv=null; },30000);
+      }catch(_){ mv=null; }
+    },true);
+    d.addEventListener('pointermove',function(e){ onMoveDrag(e); },{passive:false});
+    d.addEventListener('pointerup',function(){ endMoveDrag('ip'); },true);
+    d.addEventListener('pointercancel',function(){ endMoveDrag('ic'); },true);
+  }
+  // Keep the gesture alive when the cursor leaves the iframe (same screen-coordinate space).
+  // NOTE: the parent window fires "blur" when focus merely moves INTO the iframe, so blur
+  // must never terminate a drag — pointerup/pointercancel (either document) do that.
+  window.addEventListener('pointermove',function(e){ if(mv) onMoveDrag(e); },{capture:true,passive:false});
+  window.addEventListener('pointerup',function(){ endMoveDrag('pp'); },true);
+  window.addEventListener('pointercancel',function(){ endMoveDrag('pc'); },true);
+  // Layer order handlers
+  layerFrontBtn.addEventListener('click',function(){
+    if(!sel||syncing) return;
+    var parent=sel.parentNode; if(parent) parent.appendChild(sel);
+    histPush();
+  });
+  layerBackBtn.addEventListener('click',function(){
+    if(!sel||syncing) return;
+    var parent=sel.parentNode; if(parent) parent.insertBefore(sel,parent.firstChild);
+    histPush();
+  });
+  layerForwardBtn.addEventListener('click',function(){
+    if(!sel||syncing) return;
+    var next=sel.nextElementSibling; if(next) sel.parentNode.insertBefore(sel,next.nextSibling);
+    histPush();
+  });
+  layerBackwardBtn.addEventListener('click',function(){
+    if(!sel||syncing) return;
+    var prev=sel.previousElementSibling; if(prev) sel.parentNode.insertBefore(sel,prev);
+    histPush();
+  });
+  visEl.addEventListener('change',function(){
+    if(!sel) return;
+    if(styleMode!=='desktop'){ rSet(sel,RPROPS[4],styleMode,visEl.checked?'':'1'); return; }
+    if(visEl.checked){ sel.style.display=''; sel.removeAttribute('data-pb-hidden'); }
+    else{ sel.style.display='none'; sel.setAttribute('data-pb-hidden','1'); }
+  });
+  // style-mode tabs + topbar device buttons stay in sync (preview width + edited breakpoint)
+  function setStyleMode(m){
+    styleMode=(m==='tablet'||m==='mobile')?m:'desktop';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pb-stylemode]'),function(x){
+      var on=x.getAttribute('data-pb-stylemode')===styleMode;
+      x.classList.toggle('is-active',on); x.style.borderColor=on?'#f59e0b':'';
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pb-device]'),function(x){ x.classList.toggle('is-active',x.getAttribute('data-pb-device')===styleMode); });
+    frame.style.maxWidth=widths[styleMode]||'1100px';
+    if(sel) select(sel);
+  }
+  document.querySelectorAll('[data-pb-stylemode]').forEach(function(b){
+    b.addEventListener('click',function(){ setStyleMode(b.getAttribute('data-pb-stylemode')); });
+  });
+  srcEl.addEventListener('input',function(){
+    if(!sel||syncing||sel.tagName!=='IMG') return;
+    sel.setAttribute('src',srcEl.value.trim());
+  });
+  // Reuse existing Gallery upload system for the image URL field.
+  var pbUploadBtn=document.getElementById('pb-src-upload'), pbFileEl=document.getElementById('pb-src-file');
+  if(pbUploadBtn&&pbFileEl){
+    pbUploadBtn.addEventListener('click',function(){ pbFileEl.click(); });
+    pbFileEl.addEventListener('change',function(){
+      var f=pbFileEl.files&&pbFileEl.files[0];
+      if(!f) return;
+      var fd=new FormData(); fd.append('image',f);
+      statusEl.textContent='در حال آپلود تصویر…';
+      fetch('/api/admin/gallery/upload',{method:'POST',headers:{'Authorization':'Bearer '+tok()},body:fd})
+        .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,body:j};}); })
+        .then(function(res){
+          if(!res.ok) throw new Error((res.body&&res.body.error)||'upload failed');
+          var url=res.body.url||res.body.path;
+          srcEl.value=url;
+          srcEl.dispatchEvent(new Event('input',{bubbles:true}));
+          if(sel&&sel.tagName==='IMG') sel.setAttribute('src',url);
+          statusEl.textContent='تصویر آپلود شد.';
+        })
+        .catch(function(){ statusEl.textContent='خطا در آپلود تصویر.'; })
+        .finally(function(){ pbFileEl.value=''; });
+    });
+  }
+  hrefEl.addEventListener('input',function(){
+    if(!sel||syncing||(sel.tagName!=='A'&&sel.tagName!=='BUTTON')) return;
+    sel.setAttribute('href',hrefEl.value.trim());
+  });
+  // ── Add Element (Text/Image/Button/Divider/Section — minimal, reuses site styles) ──
+  function makeSection(d,count){
+    var s=d.createElement('div');
+    s.setAttribute('data-pb-sec','1'); s.setAttribute('data-pb-cols',String(count));
+    for(var i=0;i<count;i++){ var c=d.createElement('div'); c.setAttribute('data-pb-col','1'); var p=d.createElement('p'); p.textContent='ستون '+(i+1); c.appendChild(p); s.appendChild(c); }
+    return s;
+  }
+  function setSectionCols(d,sec,count){
+    count=Math.max(1,Math.min(3,count));
+    var cols=sec.querySelectorAll(':scope > [data-pb-col]');
+    var list=cols.length?Array.prototype.slice.call(cols):Array.prototype.slice.call(sec.querySelectorAll('[data-pb-col]'));
+    while(list.length<count){ var c=d.createElement('div'); c.setAttribute('data-pb-col','1'); var p=d.createElement('p'); p.textContent='ستون '+(list.length+1); c.appendChild(p); sec.appendChild(c); wireNode(d,c); Array.prototype.forEach.call(c.querySelectorAll('*'),function(x){wireNode(d,x);}); list.push(c); }
+    while(list.length>count){ var last=list.pop(); var prev=list[list.length-1]; if(prev){ while(last.firstChild) prev.appendChild(last.firstChild); } last.parentNode.removeChild(last); }
+    sec.setAttribute('data-pb-cols',String(count));
+  }
+  colsEl.addEventListener('change',function(){
+    if(!sel||syncing||!isSection(sel)) return;
+    setSectionCols(doc(),sel,+colsEl.value||1);
+    refreshRespStyle(doc());
+    tagEl.textContent=label(sel);
+    statusEl.textContent='تعداد ستون‌ها تغییر کرد — برای ذخیره، «ذخیره» را بزنید.';
+  });
+  function makeEl(d,type){
+    if(type.indexOf('section-')===0){ return makeSection(d,Math.max(1,Math.min(3,+type.split('-')[1]||1))); }
+    var n;
+    if(type==='image'){ n=d.createElement('img'); n.setAttribute('src','https://via.placeholder.com/800x400?text=image'); n.setAttribute('alt','تصویر'); n.style.maxWidth='100%'; }
+    else if(type==='button'){ n=d.createElement('a'); n.className='btn btn-primary'; n.setAttribute('href','#'); n.textContent='دکمه جدید'; }
+    else if(type==='divider'){ n=d.createElement('hr'); }
+    else{ n=d.createElement('p'); n.textContent='متن جدید'; }
+    return n;
+  }
+  document.querySelectorAll('[data-pb-add]').forEach(function(b){
+    b.addEventListener('click',function(){
+      try{
+        var d=doc(), body=pbBody(d);
+        if(!body){ statusEl.textContent='بدنه صفحه (#pg-body) یافت نشد.'; return; }
+        var n=makeEl(d,b.getAttribute('data-pb-add'));
+        var mode=posEl.value;
+        var isSec=isSection(n);
+        var zone=(sel&&sel.nodeType===1&&body.contains(sel))?body:(sel&&sel.nodeType===1?pbZoneOf(d,sel):null);
+        if(!zone) zone=(sel&&sel.nodeType===1)?pbZoneOf(d,sel):body;
+        if(!zone) zone=body;
+        var targetCol=(sel&&zone.contains(sel))?closestCol(sel):null;
+        if(targetCol&&pbZoneOf(d,targetCol)!==zone) targetCol=null;
+        // new leaf elements go inside selected column; sections always go to body level
+        if(!isSec&&targetCol){
+          var sib=(sel!==targetCol&&targetCol.contains(sel))?sel:null;
+          if(mode==='before'&&sib) targetCol.insertBefore(n,sib);
+          else if(mode==='after'&&sib) targetCol.insertBefore(n,sib.nextSibling);
+          else targetCol.appendChild(n);
+          wireNode(d,n);
+          select(isCol(n)?n:n);
+          statusEl.textContent='عنصر جدید در ستون درج شد — برای ذخیره، «ذخیره» را بزنید.';
+          refreshRespStyle(d);
+          return;
+        }
+        var anchor=(sel&&zone.contains(sel))?(sel.parentNode===zone?sel:pbTopChild(zone,sel)):null;
+        if(sel&&!zone.contains(sel)) anchor=null;
+        if(sel&&sel===zone) anchor=null;
+        if(mode!=='end'&&!anchor){ mode='end'; }
+        if(mode==='before'&&anchor) anchor.parentNode.insertBefore(n,anchor);
+        else if(mode==='after'&&anchor) anchor.parentNode.insertBefore(n,anchor.nextSibling);
+        else zone.appendChild(n);
+        wireNode(d,n);
+        // wire nested selectables inside (button text etc.)
+        Array.prototype.forEach.call(n.querySelectorAll('a,button,img'),function(c){ wireNode(d,c); });
+        select(n);
+        refreshRespStyle(d);
+        statusEl.textContent='عنصر جدید درج شد — برای ذخیره، «ذخیره» را بزنید.';
+      }catch(e){ statusEl.textContent='خطا در درج عنصر.'; }
+    });
+  });
+  // device preview (wrapper width only — reuses existing site CSS)
+  var widths={desktop:'1100px',tablet:'768px',mobile:'390px'};
+  document.querySelectorAll('[data-pb-device]').forEach(function(b){
+    b.addEventListener('click',function(){
+      setStyleMode(b.getAttribute('data-pb-device'));
+    });
+  });
+  iframe.addEventListener('load',function(){
+    var tries=0;
+    (function wait(){
+      try{
+        var d=doc();
+        if(d&&d.body){
+          var h=d.getElementById('site-header');
+          // Wait for the CMS content and the site loader before binding. Content that
+          // lands AFTER bind() would re-embed the saved responsive <style> inside the
+          // zone (stale copy winning over the live head block) and leave the new nodes
+          // unwired; the loader overlay is inert and swallows every canvas interaction.
+          var bodyEl=d.getElementById('pg-body');
+          var bodyPending=bodyEl&&/در حال بارگذاری/.test(bodyEl.textContent||'')&&tries<50;
+          var loaderPending=!!d.getElementById('site-loader')&&tries<50;
+          var headerPending=(h&&!h.innerHTML.trim()&&tries<50)||bodyPending||loaderPending;
+          if(!headerPending){
+            var t=d.getElementById('pg-title'); if(t) pageTitle=t.textContent;
+            bind(d); select(null);
+            undoStack=[]; redoStack=[]; histPush(); histObserve();
+            statusEl.textContent='پیش‌نمایش زنده آماده است.';
+            return;
+          }
+        }
+      }catch(e){ statusEl.textContent='خطا در بارگذاری پیش‌نمایش.'; return; }
+      tries++;
+      if(tries<55) setTimeout(wait,100);
+      else{ try{ var d2=doc(); bind(d2); select(null); undoStack=[]; redoStack=[]; histPush(); histObserve(); statusEl.textContent='پیش‌نمایش زنده آماده است.'; }catch(e){ statusEl.textContent='خطا در بارگذاری پیش‌نمایش.'; } }
+    })();
+  });
+  function cleanClone(body){
+    // strip builder-only helpers from a clone — live iframe DOM is untouched
+    // NOTE: data-pb-rid + data-pb-fs/mg/pd/al/hd-t/m are content (responsive styles) and are preserved
+    var c=body.cloneNode(true);
+    // restore selection outline on descendants AND on the zone root itself
+    // (a selected zone root also carries data-pb-sel/outline — it must not leak into saved HTML)
+    Array.prototype.forEach.call(c.querySelectorAll('[data-pb-sel]'),function(n){n.removeAttribute('data-pb-sel');n.style.outline=n.hasAttribute('data-pb-outline')?n.getAttribute('data-pb-outline'):'';n.style.outlineOffset='';if(n.getAttribute('style')==='')n.removeAttribute('style');});
+    if(c.hasAttribute&&c.hasAttribute('data-pb-sel')){c.removeAttribute('data-pb-sel');try{c.style.outline=c.hasAttribute('data-pb-outline')?c.getAttribute('data-pb-outline'):'';c.style.outlineOffset='';if(c.getAttribute('style')==='')c.removeAttribute('style');}catch(_){}}
+    Array.prototype.forEach.call(c.querySelectorAll('[data-pb-drop]'),function(n){if(n.parentNode)n.parentNode.removeChild(n);});
+    Array.prototype.forEach.call(c.querySelectorAll('.pb-dragging'),function(n){n.classList.remove('pb-dragging');});
+    ['data-pb-id','data-pb-outline','data-pb-drag','data-pb-coldrop','data-pb-sel','data-pb-zbound','data-pb-pprom'].forEach(function(a){
+      if(c.hasAttribute(a)) c.removeAttribute(a);
+      Array.prototype.forEach.call(c.querySelectorAll('['+a+']'),function(n){n.removeAttribute(a);});
+    });
+    Array.prototype.forEach.call(c.querySelectorAll('[draggable]'),function(n){n.removeAttribute('draggable');});
+    if(c.hasAttribute('draggable')) c.removeAttribute('draggable');
+    // strip inline-editing helpers so saved static HTML stays clean
+    Array.prototype.forEach.call(c.querySelectorAll('[contenteditable]'),function(n){n.removeAttribute('contenteditable');});
+    if(c.hasAttribute&&c.hasAttribute('contenteditable')) c.removeAttribute('contenteditable');
+    // drag chrome can leave an empty class="" behind — don't persist it
+    Array.prototype.forEach.call(c.querySelectorAll('[class=""]'),function(n){n.removeAttribute('class');});
+    if(c.getAttribute&&c.getAttribute('class')==='') c.removeAttribute('class');
+    // drop any previously saved responsive block, then prepend a fresh one so frontend gets the styles
+    Array.prototype.forEach.call(c.querySelectorAll('style[data-pb-responsive]'),function(n){if(n.parentNode)n.parentNode.removeChild(n);});
+    var css=buildRespCSS(doc());
+    if(css){
+      var st=doc().createElement('style');
+      st.setAttribute('data-pb-responsive','1');
+      st.textContent=css;
+      c.insertBefore(st,c.firstChild);
+    }
+    return c.innerHTML;
+  }
+  document.getElementById('pb-save').addEventListener('click',function(){
+    try{
+      var d=doc();
+      var body=pbBody(d);
+      var t=d.getElementById('pg-title'); if(t&&t.textContent.trim()) pageTitle=t.textContent.trim();
+      var payload={body:body?cleanClone(body):'',title:pageTitle||undefined};
+      try{
+        var _h=pbHeader(d); if(_h) payload.headerHtml=cleanClone(_h);
+        var _f=pbFooter(d); if(_f) payload.footerHtml=cleanClone(_f);
+      }catch(_){}
+      statusEl.textContent='در حال ذخیره…';
+      var saveUrl=staticFile?'/api/admin/static-pages/'+encodeURIComponent(staticFile):'/api/admin/pages/'+encodeURIComponent(slug);
+      fetch(saveUrl,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok()},body:JSON.stringify(payload)})
+        .then(function(r){ if(!r.ok) throw new Error('save failed'); return r.json(); })
+        .then(function(){ statusEl.textContent='ذخیره شد.'; if(sel) mark(sel); })
+        .catch(function(){ statusEl.textContent='خطا در ذخیره.'; if(sel) mark(sel); });
+    }catch(e){ statusEl.textContent='خطا در ذخیره.'; }
+  });
+})();
+</script>
+</body>
+</html>

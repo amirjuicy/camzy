@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<script>
+(function() {
+  'use strict';
+  var ORDER_STATUS_FA = {
+    pending: 'در انتظار پرداخت',
+    awaiting_payment_approval: 'در انتظار تأیید پرداخت',
+    awaiting_order_approval: 'در انتظار تأیید سفارش',
+    approved: 'تأیید شد / آماده ارسال',
+    processing: 'در حال پردازش',
+    shipped: 'ارسال‌شده',
+    delivered: 'تحویل‌شده',
+    cancelled: 'لغوشده'
+  };
+  var ORDER_STATUS_FLOW = ['pending', 'awaiting_payment_approval', 'awaiting_order_approval', 'approved', 'processing', 'shipped', 'delivered'];
+  var PAYMENT_METHOD_FA = { cod: 'پرداخت در محل', online: 'پرداخت آنلاین', card: 'کارت به کارت' };
+  function orderStatusLabel(s) {
+    var t = String(s || '');
+    return ORDER_STATUS_FA[t] || t || '—';
+  }
+  function paymentMethodLabel(m) {
+    var t = String(m || '');
+    return PAYMENT_METHOD_FA[t] || t || '—';
+  }
+  function orderTimelineDone(t, currentStatus) {
+    if (!t) return false;
+    if (t.done !== undefined) return !!t.done;
+    var s = String(t.status || '');
+    if (!s) return false;
+    var cur = String(currentStatus || '');
+    var i = ORDER_STATUS_FLOW.indexOf(s);
+    var c = ORDER_STATUS_FLOW.indexOf(cur);
+    if (i === -1 || c === -1) return s === cur;
+    return i <= c;
+  }
+  window.__result = orderStatusLabel('cod');
+})();
+</script>
+</head>
+<body>test</body>
+</html>

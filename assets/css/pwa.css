@@ -1,0 +1,371 @@
+/* ================================================================
+   Camzy — PWA (install prompt + offline)
+   Uses existing design tokens only. No layout changes.
+   ================================================================ */
+
+/* Desktop header install button: same look as other header actions */
+.site-header .header-action--pwa {
+  width: auto;
+  min-width: 44px;
+  padding: 0 12px;
+  gap: 8px;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 1px solid transparent;
+}
+
+.site-header .header-action--pwa svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.site-header .header-action--pwa .header-action__label {
+  line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+  /* Save header space on smaller desktop widths: icon only */
+  .site-header .header-action--pwa .header-action__label {
+    display: none;
+  }
+  .site-header .header-action--pwa {
+    width: 44px;
+    padding: 0;
+  }
+}
+
+/* Hidden while installed (standalone) or before JS reveals it */
+[data-pwa-install][hidden] {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Install modal — RTL, Camzy tokens only.
+   Desktop: centered dialog. Mobile: bottom sheet popup.
+   ═══════════════════════════════════════════════════════════ */
+.pwa-install-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1050);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease, visibility 0s linear 200ms;
+}
+
+.pwa-install-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 200ms ease, visibility 0s linear 0s;
+}
+
+.pwa-install-overlay[hidden] {
+  display: none !important;
+}
+
+.pwa-install-modal {
+  width: 100%;
+  max-width: 440px;
+  max-height: min(88vh, 640px);
+  overflow-y: auto;
+  background-color: var(--bg-surface); border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(12px) scale(0.97);
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  font-family: var(--font-family);
+  direction: rtl;
+  text-align: right;
+}
+
+.pwa-install-overlay.is-active .pwa-install-modal {
+  transform: translateY(0) scale(1);
+}
+
+.pwa-install-modal__handle {
+  display: none;
+}
+
+.pwa-install-modal__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-bottom: var(--border-width, 1px) solid var(--border-color-light);
+}
+
+.pwa-install-modal__icon {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-primary-50);
+  border: var(--border-width, 1px) solid var(--border-color-light); border-radius: var(--radius-lg);
+}
+
+.pwa-install-modal__icon img {
+  width: 44px;
+  height: 44px; border-radius: var(--radius-xl);
+  object-fit: cover;
+}
+
+.pwa-install-modal__titles {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pwa-install-modal__title {
+  margin: 0 0 4px;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.pwa-install-modal__subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.pwa-install-modal__close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0; border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pwa-install-modal__close:hover {
+  background-color: var(--color-gray-100);
+  color: var(--text-primary);
+}
+
+.pwa-install-modal__body {
+  padding: var(--space-4) var(--space-5);
+}
+
+.pwa-install-modal__benefits {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--bg-surface-alt);
+  border: var(--border-width, 1px) solid var(--border-color-light); border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.pwa-install-modal__benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.pwa-install-modal__benefits svg {
+  flex: 0 0 auto;
+  margin-top: 5px;
+  color: var(--color-success);
+}
+
+.pwa-install-modal__native {
+  margin-bottom: var(--space-4);
+}
+
+.pwa-install-modal__native[hidden] {
+  display: none !important;
+}
+
+.pwa-install-modal__native .btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pwa-install-modal__hint {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.pwa-install-modal__status {
+  margin: var(--space-2) 0 0;
+  min-height: 1.5em;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-info);
+  line-height: 1.9;
+}
+
+.pwa-install-modal__status:empty {
+  display: none;
+}
+
+.pwa-install-modal__manual {
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--bg-surface-alt);
+  border: var(--border-width, 1px) solid var(--border-color-light); border-radius: var(--radius-lg);
+}
+
+.pwa-install-modal__manual.is-primary {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-200, #FFF176);
+}
+
+.pwa-install-modal__manual-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.pwa-install-modal__manual-note {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.pwa-install-modal__steps {
+  margin: 0;
+  padding-right: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  line-height: 1.9;
+}
+
+.pwa-install-modal__steps li::marker {
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-bold);
+}
+
+.pwa-install-modal__footer {
+  padding: var(--space-3) var(--space-5) var(--space-5);
+}
+
+.pwa-install-modal__footer .btn-ghost {
+  color: var(--text-muted);
+}
+
+/* Mobile: bottom-sheet popup for easy thumb reach */
+@media (max-width: 640px) {
+  .pwa-install-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .pwa-install-modal {
+    max-width: none;
+    max-height: 92vh; border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    transform: translateY(24px);
+  }
+
+  .pwa-install-overlay.is-active .pwa-install-modal {
+    transform: translateY(0);
+  }
+
+  .pwa-install-modal__handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: var(--space-2) auto 0;
+    background: var(--color-gray-300); border-radius: var(--radius-full);
+  }
+
+  .pwa-install-modal__header {
+    padding-top: var(--space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-install-overlay,
+  .pwa-install-modal {
+    transition: none;
+  }
+}
+
+/* Mobile menu install entry inherits .mobile-menu__link styling */
+.mobile-menu__link--pwa {
+  width: 100%;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+
+/* Offline page (offline.html is standalone + RTL) */
+.offline-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) 0;
+  background: var(--bg-surface-alt);
+}
+
+.offline-card {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: var(--space-8);
+  background: var(--bg-surface);
+  border: var(--border-width) solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.offline-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--space-4);
+  color: var(--color-dark);
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+}
+
+.offline-card__title {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.offline-card__text {
+  margin-bottom: var(--space-6);
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.offline-card__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,1562 @@
+/* ================================================================
+   Camzy — Desktop Marketplace Polish
+   Restrained, premium Persian e-commerce UI.
+   All rules scoped to @media (min-width: 769px).
+   The header shell is injected globally by common.js, so these
+   rules apply identically to every page of the site.
+   Mobile (max-width: 768px) is completely untouched.
+   ================================================================ */
+
+@media (min-width: 769px) {
+
+  /* ── Container ──────────────────────────────────────────────
+     Reference homepage (Digikala desktop @1920px): centered content
+     column, max 1336px, 16px gutters. Hero is full-bleed; every other
+     homepage section aligns to this column. Shared by every page. */
+  .container {
+    width: 100%;
+    max-width: 1336px;
+    margin-inline: auto;
+    padding-inline: 16px;
+  }
+
+  /* ================================================================
+     GLOBAL DESKTOP CHROME — HEADER
+     ================================================================ */
+
+  /* ── Promo Bar (thin, quiet) ──────────────────────────────── */
+  .header-services {
+    min-height: 32px;
+    background-color: var(--color-promo-green);
+  }
+
+  .header-services .container,
+  .header-services__items {
+    min-height: 32px;
+  }
+
+  .header-services__item {
+    font-size: 11.5px;
+    font-weight: 500;
+  }
+
+  .header-services__item:first-child {
+    font-size: 11.5px;
+  }
+
+  .header-services__sep {
+    height: 12px;
+    margin: 0 16px;
+    background-color: rgba(255,255,255,0.3);
+  }
+
+  /* ── Main Header Row (64–72px) ────────────────────────────── */
+  .header-main {
+    padding: 0;
+    background-color: var(--color-white);
+  }
+
+  .header-main .container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 24px;
+    min-height: 68px;
+    direction: rtl;
+  }
+
+  /* ── Logo ─────────────────────────────────────────────────── */
+  .header-logo {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .header-logo__icon {
+    width: 42px;
+    height: 42px;
+    background-color: var(--color-primary); border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-dark);
+  }
+
+  .header-logo__icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .header-logo__title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .header-logo__subtitle {
+    font-size: 10.5px;
+    font-weight: 400;
+    color: var(--text-muted);
+    line-height: 1.2;
+  }
+
+  /* ── Search (dominant, Digikala-style) ─────────────────────
+     Logo stays pinned right (RTL start), search flex-grows to fill all
+     available middle space, account/cart pinned left (RTL end). No
+     max-width cap so the bar actually distributes across wide screens. */
+  .header-search {
+    flex: 1 1 auto;
+    min-width: 200px;
+    max-width: none;
+    margin-inline: 8px;
+  }
+
+  .header-search .search-input-wrapper {
+    min-height: 44px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--color-gray-100);
+    border: 1px solid transparent; border-radius: var(--radius-full);
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+
+  .header-search .search-input-wrapper:hover {
+    background-color: var(--color-gray-200);
+  }
+
+  .header-search .search-input-wrapper:focus-within {
+    background-color: var(--color-white);
+    border-color: var(--color-gray-300);
+  }
+
+  .header-search .search-input {
+    min-height: 42px;
+    padding: 0 44px 0 12px;
+    background-color: transparent;
+    border: none;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .header-search .search-input:focus {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .header-search .search-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .header-search .search-submit {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary);
+    border: none; border-radius: var(--radius-circle);
+    color: var(--text-inverse);
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+
+  .header-search .search-submit:hover {
+    background-color: var(--color-primary-light);
+  }
+
+  .header-search .search-submit:active {
+    transform: translateY(-50%) scale(0.96);
+  }
+
+  .header-search .search-submit svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* ── Account / Cart (compact utility controls) ──────────────
+     Pinned to the far end (left in RTL) via margin-inline-start:auto
+     so logo/search/actions follow Digikala's horizontal distribution. */
+  .header-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-inline-start: auto;
+  }
+
+  .site-header .header-action {
+    min-width: 40px;
+    min-height: 40px;
+    color: var(--text-secondary);
+    border: none; border-radius: var(--radius-lg);
+  }
+
+  .site-header .header-action:hover {
+    color: var(--text-primary);
+    background-color: var(--color-gray-100);
+    border-color: transparent;
+  }
+
+  .site-header .header-action svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .header-account-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 12px;
+    border: none;
+    background-color: transparent;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .header-account-action__icon {
+    color: var(--text-secondary);
+  }
+
+  .header-account-action__icon svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  /* Thin separator between account and cart cluster */
+  .header-account-action:not(:last-child) {
+    position: relative;
+  }
+
+  .header-action--wishlist,
+  .header-action--cart {
+    width: 40px;
+    padding: 0;
+  }
+
+  .header-action--cart {
+    position: relative;
+    background-color: transparent;
+  }
+
+  .header-action__badge {
+    top: 2px;
+    left: 2px;
+    min-width: 17px;
+    height: 17px;
+    background-color: var(--color-primary);
+    border: 2px solid var(--color-white);
+    font-size: 10px;
+  }
+
+  /* ── Navigation Row (part of the header, not buttons) ─────── */
+  .site-nav {
+    background-color: var(--color-white);
+    border-top: none;
+  }
+
+  .site-nav .container {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    min-height: 42px;
+    direction: rtl;
+  }
+
+  .nav-categories {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  /* ☰ دسته‌بندی کالاها — strongest item, but NOT a colored block */
+  .nav-categories-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 16px;
+    color: var(--text-primary);
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 150ms ease;
+  }
+
+  .nav-categories-btn:hover {
+    color: var(--color-primary-dark);
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  .nav-categories-btn:active {
+    transform: none;
+  }
+
+  .nav-categories-btn svg {
+    width: 16px;
+    height: 16px;
+    color: var(--color-primary-dark);
+  }
+
+  /* Hover open/close for the mega-menu (desktop pointer devices) */
+  @media (hover: hover) {
+    .nav-categories:hover .categories-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .nav-categories:hover::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      height: 12px;
+    }
+  }
+
+  /* Vertical separator after the category item */
+  .nav-categories::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 13px;
+    bottom: 13px;
+    width: 1px;
+    background-color: var(--border-color);
+  }
+
+  /* ── Nav Links (quiet, thin bottom indicator) ─────────────── */
+  .nav-right {
+    display: flex;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0;
+    overflow-x: visible;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    height: 42px;
+    padding: 0 12px;
+    color: var(--text-secondary);
+    border-radius: 0;
+    font-size: 12.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    position: relative;
+    transition: color 150ms ease;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    background-color: var(--color-primary);
+    border-radius: 0;
+    opacity: 0;
+    transform: scaleX(0.6);
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+    background-color: transparent;
+  }
+
+  .nav-link:hover::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .nav-link.is-active {
+    color: var(--text-primary);
+    font-weight: 700;
+    background-color: transparent;
+  }
+
+  .nav-link.is-active::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .nav-link svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ── Categories Mega-Menu (two-panel) ─────────── */
+  .categories-dropdown {
+    left: auto;
+    right: 0;
+    width: min(960px, calc(100vw - 48px));
+    max-height: min(700px, calc(100vh - 120px));
+    overflow: hidden;
+    background: var(--color-white);
+    border: 1px solid var(--border-color-light); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+    margin: 0;
+  }
+
+  .categories-dropdown::before { display: none; }
+
+  /* Left panel: category list */
+  .mega-left {
+    display: flex;
+    flex-direction: column;
+    min-width: 260px;
+    width: 260px;
+    max-height: min(700px, calc(100vh - 120px));
+    overflow-y: auto;
+    border-left: 1px solid var(--border-color-light);
+    flex-shrink: 0;
+  }
+
+  .mega-left__list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .mega-left__list::-webkit-scrollbar { width: 4px; }
+  .mega-left__list::-webkit-scrollbar-track { background: transparent; }
+  .mega-left__list::-webkit-scrollbar-thumb { background: #ddd; border-radius: var(--radius-sm); }
+
+  .mega-cat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    font-size: 13px;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: background-color 120ms ease, color 120ms ease;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .mega-cat:hover,
+  .mega-cat.is-active {
+    background-color: var(--color-primary-50, #fff5f7);
+    color: var(--color-primary-dark, #c1002e);
+  }
+
+  .mega-cat svg:first-child {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    opacity: 0.7;
+  }
+
+  .mega-cat:hover svg:first-child,
+  .mega-cat.is-active svg:first-child {
+    color: var(--color-primary-dark, #c1002e);
+    opacity: 1;
+  }
+
+  .mega-cat__name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .mega-cat > svg:last-child {
+    width: 14px;
+    height: 14px;
+    color: #ccc;
+    flex-shrink: 0;
+  }
+
+  /* Right panel: subcategories */
+  .mega-right {
+    display: flex;
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    min-width: 0;
+  }
+
+  .mega-right::-webkit-scrollbar { width: 4px; }
+  .mega-right::-webkit-scrollbar-track { background: transparent; }
+  .mega-right::-webkit-scrollbar-thumb { background: #ddd; border-radius: var(--radius-sm); }
+
+  .mega-panel {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .mega-panel:not([hidden]) { display: flex; }
+
+  .mega-panel__all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-secondary, #D71920);
+    text-decoration: none;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color-light);
+    white-space: nowrap;
+  }
+
+  .mega-panel__all:hover { text-decoration: underline; }
+
+  .mega-panel__all svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .mega-panel__cols {
+    display: flex;
+    gap: 16px;
+  }
+
+  .mega-panel__col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mega-sub__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 120ms ease;
+  }
+
+  .mega-sub__item:hover { color: var(--color-primary-dark, #c1002e); }
+
+  .mega-sub__item span:not(.mega-sub__icon) {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mega-sub__item svg {
+    width: 14px;
+    height: 14px;
+    color: #ccc;
+    flex-shrink: 0;
+  }
+
+  /* ── Service / Trust Bar (strip, not cards) ───────────────── */
+  .service-bar {
+    display: block;
+    padding: 14px 0;
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--border-color-light);
+  }
+
+  .service-bar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .service-bar__items {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0;
+  }
+
+  .service-bar__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    transition: none;
+  }
+
+  .service-bar__item:hover {
+    background: none;
+  }
+
+  .service-bar__item svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+  }
+
+  .service-bar__item strong {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .service-bar__divider {
+    display: block;
+    width: 1px;
+    height: 20px;
+    background-color: var(--border-color-light);
+    flex-shrink: 0;
+  }
+
+  /* ================================================================
+     GLOBAL PAGE FOUNDATION
+     ================================================================ */
+
+  .section {
+    padding: 36px 0;
+  }
+
+  .section-header {
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  /* ================================================================
+     HOMEPAGE-SPECIFIC SECTIONS
+     ================================================================ */
+
+  /* ── Hero Slideshow — full-bleed desktop ────────────────────
+     Reference: edge-to-edge banner (~400px tall at 1920px viewport).
+     Text column pinned to the RTL start (right) inside the 1336px
+     content column; visual pinned to the RTL end (left). */
+  #hero-slideshow .hero__slides {
+    min-height: 400px;
+  }
+
+  .hero {
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .hero .container {
+    max-width: 1336px;
+    min-height: 400px;
+    padding-top: 36px;
+    padding-bottom: 48px;
+    gap: 36px;
+    justify-content: flex-start;
+    text-align: right;
+  }
+
+  .hero__slide-content {
+    max-width: 560px;
+    gap: 16px;
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+    align-items: flex-start;
+    text-align: right;
+  }
+
+  /* Digikala-style distribution: text pinned right (RTL start),
+     visual pinned left (RTL end) instead of stacked in the center. */
+  .hero__slide .container {
+    justify-content: flex-start;
+  }
+
+  .hero__slide-image {
+    left: 5%;
+    right: auto;
+    transform: translateY(-50%);
+    margin: 0;
+  }
+
+  .hero__badge {
+    padding: 6px 16px;
+    font-size: 12px;
+    background-color: rgba(215, 25, 32,0.12);
+    border: 1px solid rgba(215, 25, 32,0.2);
+  }
+
+  .hero__title {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.35;
+    max-width: 480px;
+  }
+
+  .hero__text {
+    font-size: 14px;
+    color: rgba(255,255,255,0.72);
+    max-width: 440px;
+    line-height: 1.75;
+  }
+
+  .hero__actions {
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .hero__actions .btn {
+    padding: 11px 28px;
+    font-size: 13.5px; border-radius: var(--radius-md);
+  }
+
+  .hero__slide-image {
+    width: 380px;
+    height: 380px;
+    opacity: 0.18;
+  }
+
+  .hero__slide .container {
+    min-height: 400px;
+  }
+
+  /* ── Category strip (reference: single centered icon row) ───
+     Reference @1920px: ~10 circular icons in ONE row, evenly spread
+     across the 1336px content column, circle + two-line label, no
+     card chrome. Flex row keeps all 12 project categories on one
+     line at reference width (~103px each) instead of a 6-col grid. */
+  .categories-section {
+    padding: 20px 0 8px;
+  }
+
+  .categories-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .categories-grid > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .category-card {
+    padding: 8px 4px 4px;
+    border: none;
+    border-radius: 0;
+    gap: 8px;
+    background: transparent;
+    box-shadow: none;
+    transition: none;
+  }
+
+  .category-card:hover {
+    border-color: transparent;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .category-card__icon {
+    width: 52px;
+    height: 52px; border-radius: var(--radius-circle);
+    margin-inline: auto;
+    transition: background-color 200ms ease-out, color 200ms ease-out;
+  }
+
+  .category-card__icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .category-card:hover .category-card__icon {
+    filter: brightness(0.85);
+  }
+
+  .category-card__name {
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.6;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
+  }
+
+  .category-card__count {
+    display: block;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  /* ── Product Grid ───────────────────────────────────────────
+     Full container width: 3 cols at 1024, 4 cols at 1280, 5 cols at 1440+. */
+  .products-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    justify-content: stretch;
+  }
+
+  .product-listing-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .product-card { border-radius: var(--radius-xl);
+    transition: box-shadow 200ms ease-out, border-color 200ms ease-out;
+    background: var(--card-bg, var(--color-white));
+    border: 1px solid var(--card-border, var(--border-color-light));
+  }
+
+  .product-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-color: var(--card-hover-border, var(--border-color));
+  }
+
+  .product-card__image {
+    background-color: var(--card-image-bg, #f0f0f1);
+  }
+
+  .product-card__image img {
+    transition: transform 300ms ease-out;
+  }
+
+  .product-card:hover .product-card__image img {
+    transform: scale(1.04);
+  }
+
+  .product-card__body {
+    padding: 8px 10px 10px;
+  }
+
+  .product-card__title {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .product-card__price-current {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ── Special Offers (reference: inset rounded box) ────────
+     Reference @1920px: red box inset in the 1336px content column
+     (NOT full-bleed), 16px radius, ~172px promo panel on the RTL
+     start (right), white cards flush with 1px dividers and no gaps. */
+  .special-offers {
+    margin: 16px 0 8px;
+  }
+
+  .special-offers__wrap { border-radius: var(--radius-2xl);
+  }
+
+  .special-offers__left {
+    justify-content: center;
+    padding: 24px 12px;
+    gap: 12px;
+    min-width: 172px;
+    flex: 0 0 172px;
+  }
+
+  .special-offers__logo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .special-offers__logo svg {
+    width: 56px;
+    height: 56px;
+  }
+
+  .special-offers__title-text {
+    font-size: 15px;
+  }
+
+  .so-countdown__box {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .special-offers__carousel {
+    gap: 0;
+    padding: 12px 12px 12px 12px;
+    align-items: stretch;
+  }
+
+  .so-card {
+    min-height: 260px;
+    border-radius: 0;
+    border-inline-start: 1px solid #f0f0f1;
+  }
+
+  .so-card:first-child {
+    border-radius: 0;
+    border-inline-start: none;
+  }
+
+  .so-card:last-child { border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+    overflow: hidden;
+  }
+
+  .so-card__img {
+    aspect-ratio: 1;
+  }
+
+  .so-card__title {
+    font-size: 12.5px;
+    min-height: 40px;
+  }
+
+  .so-card__new-price {
+    font-size: 16px;
+  }
+
+  .so-card__old-price {
+    font-size: 11.5px;
+  }
+
+  .so-card__discount {
+    font-size: 11.5px;
+  }
+
+  /* ── Brands ───────────────────────────────────────────────── */
+  .brands-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+
+  .brand-card {
+    aspect-ratio: 2.2/1; border-radius: var(--radius-xl);
+    transition: border-color 200ms ease-out, box-shadow 250ms var(--ease-out-expo), transform 250ms var(--ease-out-expo);
+    background: var(--color-white);
+  }
+
+  .brand-card:hover {
+    border-color: var(--color-primary-200);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+    transform: translateY(-3px);
+  }
+
+  .brand-card__logo {
+    filter: none;
+    opacity: 1;
+  }
+
+  .brand-card:hover .brand-card__logo {
+    opacity: 1;
+    filter: none;
+  }
+
+  /* ── Why Us / Guide ───────────────────────────────────────── */
+  .why-us-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  .why-us-card {
+    padding: 24px 16px; border-radius: var(--radius-xl);
+    gap: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: background-color 200ms ease-out, border-color 200ms ease-out, transform 250ms var(--ease-out-expo);
+  }
+
+  .why-us-card:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: none;
+    transform: translateY(-2px);
+  }
+
+  .why-us-card__title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .guide-steps {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  /* ── Articles ─────────────────────────────────────────────── */
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .article-card { border-radius: var(--radius-xl);
+    transition: box-shadow 200ms ease-out, border-color 200ms ease-out;
+    background: var(--color-white);
+  }
+
+  .article-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: var(--border-color);
+  }
+
+  .article-card__body {
+    padding: 14px 16px;
+  }
+
+  .article-card__title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* ── CTA ──────────────────────────────────────────────────── */
+  .cta-section {
+    border-top: none;
+    background: linear-gradient(135deg, var(--color-dark) 0%, #1a1a1a 50%, var(--color-dark-surface) 100%);
+  }
+
+  .cta-section .container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 36px;
+  }
+
+  .cta__title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--color-white);
+  }
+
+  .cta__text {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* ── Footer ───────────────────────────────────────────────── */
+  .footer-main {
+    grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: 32px;
+    padding-bottom: 28px;
+  }
+
+  .footer-bottom .container {
+    flex-direction: row;
+  }
+
+  .footer-newsletter .container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-newsletter__form {
+    flex-direction: row;
+  }
+
+  .footer-newsletter__input {
+    min-width: 280px;
+    width: auto;
+  }
+
+  .footer-newsletter__btn {
+    width: auto;
+  }
+
+  /* ── Search dropdown polish ───────────────────────────────── */
+  .search-dropdown {
+    max-height: 460px; border-radius: var(--radius-lg);
+  }
+
+  /* ── Digikala-style content distribution ───────────────────
+     Remove narrow centered cards: recommendation, shop, CTA, footer
+     all stretch to the full wide container with edge-to-edge rows. */
+  .rec-card {
+    max-width: none;
+    margin: 0;
+  }
+
+  .rec-carousel {
+    justify-content: flex-start;
+  }
+
+  .shop-layout {
+    grid-template-columns: 280px minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .section-header {
+    justify-content: space-between;
+  }
+
+  .cta-section .container {
+    justify-content: space-between;
+    text-align: right;
+  }
+
+  .cta__content {
+    align-items: flex-start;
+    text-align: right;
+  }
+
+  .footer-newsletter .container {
+    justify-content: space-between;
+    text-align: right;
+  }
+
+  .footer-main {
+    justify-content: stretch;
+  }
+
+  /* ================================================================
+     COMPACT DESKTOP (769–1023px)
+     ================================================================ */
+  @media (min-width: 769px) and (max-width: 1023px) {
+    .container {
+      padding-inline: 16px;
+    }
+
+    .header-main .container {
+      gap: 14px;
+    }
+
+    .header-logo__subtitle {
+      display: none;
+    }
+
+    .header-search {
+      max-width: none;
+    }
+
+    .header-account-action {
+      padding: 0;
+      width: 40px;
+      justify-content: center;
+    }
+
+    .header-account-action__text {
+      display: none;
+    }
+
+    .header-account-action__icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-categories-btn {
+      padding: 0 12px;
+    }
+
+    .nav-link {
+      padding: 0 10px;
+      font-size: 12.5px;
+    }
+
+    .hero .container {
+      min-height: 280px;
+      padding-top: 32px;
+      padding-bottom: 32px;
+      gap: 24px;
+    }
+
+    .hero__title {
+      font-size: 24px;
+    }
+
+    .hero__slide-image {
+      width: 260px;
+      height: 260px;
+      left: 4%;
+      right: auto;
+      transform: translateY(-50%);
+    }
+
+    .categories-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .products-grid,
+    .product-listing-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .brands-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Cart page — compact desktop */
+    .cart-layout__main {
+      min-width: 0;
+    }
+
+    .cart-item-row {
+      padding: var(--space-3) var(--space-4);
+    }
+
+    .cart-layout__sidebar {
+      width: 300px;
+    }
+
+    .cart-summary-box {
+      padding: var(--space-4);
+    }
+
+    .footer-main {
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+  }
+
+  /* ================================================================
+     WIDE DESKTOP (1440px+)
+     ================================================================ */
+  @media (min-width: 1440px) {
+    .container {
+      padding-inline: 24px;
+    }
+
+    .hero .container {
+      min-height: 380px;
+    }
+
+    .hero__slide-image {
+      width: 440px;
+      height: 440px;
+      left: 6%;
+      right: auto;
+      transform: translateY(-50%);
+    }
+
+    .hero__title {
+      font-size: 34px;
+    }
+
+    .products-grid,
+    .product-listing-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+  }
+
+  /* ================================================================
+     CART PAGE — Desktop
+     ================================================================ */
+
+  .cart-page {
+    padding-top: 14px;
+    padding-bottom: var(--space-8);
+  }
+
+  .cart-layout {
+    display: flex;
+    gap: var(--space-6);
+    margin-bottom: var(--space-4);
+  }
+
+  .cart-layout__main {
+    flex: 1 1 auto;
+    min-width: 660px;
+  }
+
+  .cart-card--header { border-radius: var(--radius-xl);
+    box-shadow: none;
+  }
+
+  .cart-card__header-inner {
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .cart-items {
+    padding: 0;
+  }
+
+  .cart-item-row {
+    padding: var(--space-3) var(--space-6); border-radius: var(--radius-md);
+    height: auto;
+  }
+
+  .cart-layout__sidebar {
+    width: 340px;
+    flex-shrink: 0;
+  }
+
+  .cart-sidebar-sticky {
+    position: sticky;
+    top: 183px;
+  }
+
+  .cart-summary-box {
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+  }
+
+  .cart-charity-banner {
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .cart-recent__item {
+    min-width: 164px;
+    max-width: 164px;
+  }
+
+  .cart-recent__item-title {
+    font-size: 13px;
+    min-height: 2.6em;
+  }
+
+  .cart-recent__new-price {
+    font-size: 15px;
+  }
+
+  /* ================================================================
+     RECOMMENDATION CAROUSEL — DESKTOP
+     ================================================================ */
+
+  .rec-card__item {
+    min-width: 164px;
+    max-width: 164px;
+  }
+
+  .rec-card__item-title {
+    font-size: 13px;
+    min-height: 2.6em;
+  }
+
+  .rec-card__item-new-price {
+    font-size: 15px;
+  }
+
+  .rec-arrow {
+    width: 36px;
+    height: 36px;
+  }
+
+  .rec-arrow svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .rec-arrow--prev {
+    left: -18px;
+  }
+
+  .rec-arrow--next {
+    right: -18px;
+  }
+
+  .rec-card__body:hover .rec-arrow {
+    display: flex;
+  }
+
+  /* ================================================================
+     PRODUCT DETAIL — Desktop two-column layout
+     ================================================================ */
+
+  .pdp-layout {
+    flex-direction: row;
+    gap: 32px;
+    align-items: flex-start;
+  }
+
+  /* ── Gallery Column (right side in RTL) ───────────────────
+     Digikala proportion: gallery ≈ 38% of container, capped so the
+     main image never outgrows the info column. */
+  .pdp-layout__gallery {
+    flex: 0 0 min(38%, 500px);
+    max-width: min(38%, 500px);
+    position: sticky;
+    top: 110px;
+    align-self: flex-start;
+    gap: 16px;
+  }
+
+  .pdp-promo-badge {
+    padding: 10px 16px;
+  }
+
+  .pdp-gallery-wrapper {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .pdp-action-icons {
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .pdp-action-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pdp-main-image {
+    flex: 1;
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    min-height: auto;
+  }
+
+  .pdp-thumbnails {
+    gap: 8px;
+  }
+
+  .pdp-thumb {
+    width: 72px;
+    height: 72px;
+  }
+
+  /* ── Info Column (left side in RTL) ─────────────────────── */
+  .pdp-layout__info {
+    flex: 1 1 0%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .pdp-title {
+    font-size: 22px;
+    line-height: 1.4;
+  }
+
+  .pdp-rating-row {
+    gap: 12px;
+  }
+
+  .pdp-specs__grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+
+  .pdp-spec-item {
+    padding: 12px;
+  }
+
+  .pdp-spec-item__label {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .pdp-spec-item__value {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .pdp-delivery-info {
+    padding: 4px 0 12px;
+  }
+
+  .pdp-insurance {
+    padding: 0;
+  }
+
+  .pdp-return-notice {
+    padding: 8px 0;
+  }
+
+  /* ── Buy Box (sticky within info column) ──────────────────
+     Digikala: full-width buy box below the specs strip, not a
+     narrow column beside it. Price and add-to-cart side-by-side. */
+  .dk-buybox-wrap {
+    position: sticky;
+    top: 110px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 12px 0;
+    row-gap: 8px;
+  }
+
+  /* Digikala: price right / cart left on one row (desktop) */
+  .dk-buybox__price-cart {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .dk-buybox__price {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .dk-buybox__price-top {
+    justify-content: flex-start;
+  }
+
+  .dk-buybox__cart {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+
+  /* ── Features ───────────────────────────────────────────── */
+  .pdp-features {
+    flex-direction: row;
+    gap: 24px;
+  }
+
+  .pdp-feature {
+    font-size: 13px;
+  }
+
+  /* ── Tabs ───────────────────────────────────────────────── */
+  .product-tabs__nav {
+    position: sticky;
+    top: 110px;
+    z-index: 100;
+    background: var(--bg-body, #fff);
+  }
+  .product-tabs__tab {
+    padding: 14px 24px;
+    font-size: 15px;
+  }
+
+  /* ================================================================
+     DESKTOP HERO WIDER (1024px+)
+     ================================================================ */
+  @media (min-width: 1024px) {
+    .hero .container {
+      max-width: 1336px;
+    }
+
+    /* ── PDP: Digikala layout — specs full-width, buy box below ── */
+    .pdp-layout__info {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .pdp-layout__info > * { min-width: 0; }
+    .pdp-layout__info > .pdp-specs { order: 3; }
+    .pdp-layout__info > .pdp-delivery-info { order: 4; }
+    .pdp-layout__info > .pdp-return-notice { order: 5; }
+    .pdp-layout__info > .dk-buybox-wrap { order: 6; }
+    .pdp-layout__info > .pdp-features { order: 7; }
+  }
+
+} /* end @media (min-width: 769px) */

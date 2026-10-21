@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img">
+  <rect width="400" height="400" fill="#F4F8FA"/>
+  <rect x="74" y="130" width="252" height="150" rx="16" fill="#D71920"/>
+  <rect x="74" y="130" width="252" height="150" rx="16" fill="none" stroke="#171717" stroke-width="3"/>
+  <rect x="96" y="156" width="150" height="96" rx="8" fill="#171717"/>
+  <rect x="106" y="166" width="130" height="76" rx="4" fill="#E4572E" opacity=".85"/>
+  <circle cx="126" cy="186" r="8" fill="#EAF6FA" opacity=".9"/>
+  <circle cx="290" cy="172" r="8" fill="#D71920"/>
+  <circle cx="290" cy="200" r="8" fill="#94A6B8"/>
+  <circle cx="290" cy="228" r="8" fill="#94A6B8"/>
+  <rect x="258" y="250" width="56" height="10" rx="5" fill="#2A2A2A"/>
+  <text x="200" y="312" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#2A2A2A">DVR 8CH</text>
+</svg>

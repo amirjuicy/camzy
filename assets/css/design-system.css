@@ -1,0 +1,261 @@
+/* ================================================================
+   Camzy — Design Tokens
+   ================================================================ */
+
+:root {
+  /* ── Colors ───────────────────────────────────────────────────
+     Camzy — CCTV / security-camera identity.
+     Deep navy = trust & surveillance; cyan = imaging technology. */
+  --color-primary:        #D71920;
+  --color-primary-light:  #E34A50;
+  --color-primary-dark:   #A61218;
+  --color-primary-50:     #FDECEA;
+  --color-primary-100:    #FBD9D6;
+  --color-primary-200:    #F7B3AE;
+
+  --color-accent:         #D71920;
+  --color-accent-light:   #E34A50;
+  --color-accent-dark:    #A61218;
+  --color-accent-50:      #FDECEA;
+
+  --color-dark:           #171717;
+  --color-dark-surface:   #1F1F1F;
+  --color-dark-secondary: #2A2A2A;
+  --color-dark-border:    #3A3A3A;
+
+  --color-danger:         #D32F2F;
+  --color-danger-light:   #EF5350;
+  --color-danger-50:      #FFEBEE;
+
+  --color-success:        #2E7D32;
+  --color-success-light:  #4CAF50;
+  --color-success-50:     #E8F5E9;
+
+  /* ── Promotional / Sale ─────────────────────────────────── */
+  --color-promo-red:      #E53935;
+  --color-promo-red-light:#EF5350;
+  --color-promo-green:    #00A86B;
+
+  --color-warning:        #ED6C02;
+  --color-warning-light:  #FF9800;
+  --color-warning-50:     #FFF3E0;
+
+  --color-info:           #D71920;
+  --color-info-light:     #E34A50;
+  --color-info-50:        #FDECEA;
+
+  --color-text-on-dark:   #FFFFFF;
+  --color-text-muted-dark:#BDBDBD;
+
+  /* ── Neutrals ───────────────────────────────────────────────── */
+  --color-white:          #FFFFFF;
+  --color-gray-50:        #FAFAFA;
+  --color-gray-100:       #F5F5F5;
+  --color-gray-200:       #EEEEEE;
+  --color-gray-300:       #E0E0E0;
+  --color-gray-400:       #BDBDBD;
+  --color-gray-500:       #9E9E9E;
+  --color-gray-600:       #757575;
+  --color-gray-700:       #616161;
+  --color-gray-800:       #424242;
+  --color-gray-900:       #212121;
+  --color-black:          #000000;
+
+  /* ── Semantic ───────────────────────────────────────────────── */
+  --bg-body:              #FFFFFF;
+  --bg-surface:           #FFFFFF;
+  --bg-surface-alt:       #FAFAFA;
+  --text-primary:         #171717;
+  --text-secondary:       #555555;
+  --text-muted:           #999999;
+  --text-inverse:         #FFFFFF;
+  --border-color:         #E0E0E0;
+  --border-color-light:   #EEEEEE;
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  --font-family:          'Vazirmatn', 'Tahoma', 'Arial', sans-serif;
+  --font-size-xs:         0.75rem;    /* 12px */
+  --font-size-sm:         0.8125rem;  /* 13px */
+  --font-size-base:       0.875rem;   /* 14px */
+  --font-size-md:         1rem;       /* 16px */
+  --font-size-lg:         1.125rem;   /* 18px */
+  --font-size-xl:         1.25rem;    /* 20px */
+  --font-size-2xl:        1.5rem;     /* 24px */
+  --font-size-3xl:        1.875rem;   /* 30px */
+  --font-size-4xl:        2.25rem;    /* 36px */
+
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --font-weight-black:    900;
+
+  --line-height-tight:    1.3;
+  --line-height-normal:   1.6;
+  --line-height-loose:    1.8;
+
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide:  0.02em;
+
+  /* ── Spacing ────────────────────────────────────────────────── */
+  --space-0:   0;
+  --space-1:   0.25rem;   /* 4px */
+  --space-2:   0.5rem;    /* 8px */
+  --space-3:   0.75rem;   /* 12px */
+  --space-4:   1rem;      /* 16px */
+  --space-5:   1.25rem;   /* 20px */
+  --space-6:   1.5rem;    /* 24px */
+  --space-8:   2rem;      /* 32px */
+  --space-10:  2.5rem;    /* 40px */
+  --space-12:  3rem;      /* 48px */
+  --space-16:  4rem;      /* 64px */
+  --space-20:  5rem;      /* 80px */
+  --space-24:  6rem;      /* 96px */
+
+  /* ── Shadows ────────────────────────────────────────────────── */
+  --shadow-xs:   0 1px 2px rgba(0,0,0,0.05);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:   0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.03);
+  --shadow-xl:   0 20px 25px rgba(0,0,0,0.10), 0 8px 10px rgba(0,0,0,0.04);
+  --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.05);
+
+  /* ── Borders ────────────────────────────────────────────────── */
+  --border-width:   1px;
+  --border-width-2: 2px;
+  --border-style:   solid;
+
+  /* ── Radius ───────────────────────────────────────────────────
+     Site-wide scale. Use these tokens for every border-radius;
+     literals are reserved for 0 (square) and circles. */
+  --radius-none: 0;
+  --radius-sm:   4px;    /* subtle: badges, small chips, dividers */
+  --radius-md:   6px;    /* controls: buttons, inputs, selects */
+  --radius-lg:   8px;    /* small surfaces: search, dropdowns, tiles */
+  --radius-xl:   12px;   /* cards, panels */
+  --radius-2xl:  16px;   /* modals, sheets, large containers */
+  --radius-3xl:  24px;   /* hero / feature containers */
+  --radius-full: 9999px; /* pills: tags, chips, avatars, toggles */
+  --radius-circle: 50%;  /* genuinely circular elements */
+
+  /* ── Form-card inputs ────────────────────────────────────────
+     Shared sizing consumed by .contact-form-card .input and
+     .ac-panel--form .input (desktop 44px/13.5px -> ≤900px 48px/14px).
+     Single source of truth for both files. */
+  --form-card-input-height:           44px;
+  --form-card-input-font-size:        13.5px;
+  --form-card-input-height-mobile:    48px;
+  --form-card-input-font-size-mobile: 14px;
+
+  /* ── Transitions ────────────────────────────────────────────── */
+  --transition-fast:   150ms ease-out;
+  --transition-base:   200ms ease-out;
+  --transition-slow:   300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-expo:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart:    cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-drawer:   320ms;
+  --duration-overlay:  200ms;
+
+  /* ── Z-Index ────────────────────────────────────────────────── */
+  --z-dropdown:   100;
+  --z-sticky:     200;
+  --z-fixed:      300;
+  --z-overlay:    400;
+  --z-modal:      500;
+  --z-toast:      600;
+
+  /* ── Container ────────────────────────────────────────────────
+     Reference homepage (Digikala desktop, 1920px viewport): centered
+     content column ~1336px with 16px gutters. Hero stays full-bleed;
+     all other homepage sections align to this column. */
+  --container-max:     1336px;
+  --container-padding: 16px;
+
+  /* ── Mobile Spacing System ─────────────────────────────────── */
+  --mobile-gutter:     12px;
+  --mobile-gap-sm:     6px;
+  --mobile-gap:        8px;
+  --mobile-gap-md:     12px;
+  --mobile-gap-lg:     16px;
+  --mobile-section-gap: 20px;
+  --mobile-card-radius: var(--radius-xl);
+}
+
+/* ── Product card color themes ───────────────────────────────
+   Reusable, subtle card color themes. Consumed by components.css
+   (.product-card and .product-card--theme-*). Values intentionally
+   stay within the neutral/slate/stone/mist/ink families to avoid
+   overly bright colors. */
+:root {
+  --card-bg: var(--bg-surface);
+  --card-border: var(--border-color-light);
+  --card-image-bg: #f0f0f1;
+  --card-brand: var(--color-primary-dark);
+  --card-title: var(--text-primary);
+  --card-price: var(--text-primary);
+  --card-muted: var(--text-muted);
+  --card-accent: var(--color-primary);
+  --card-hover-border: var(--border-color);
+
+  --card-theme-default-bg: #ffffff;
+  --card-theme-default-border: #ececec;
+  --card-theme-default-image-bg: #f0f0f1;
+  --card-theme-default-brand: #A61218;
+  --card-theme-default-title: #171717;
+  --card-theme-default-price: #171717;
+  --card-theme-default-muted: #757575;
+  --card-theme-default-accent: #D71920;
+  --card-theme-default-hover-border: #d9d9d9;
+
+  --card-theme-neutral-bg: #fafafa;
+  --card-theme-neutral-border: #e4e4e4;
+  --card-theme-neutral-image-bg: #f1f1f2;
+  --card-theme-neutral-brand: #424242;
+  --card-theme-neutral-title: #212121;
+  --card-theme-neutral-price: #212121;
+  --card-theme-neutral-muted: #757575;
+  --card-theme-neutral-accent: #616161;
+  --card-theme-neutral-hover-border: #d0d0d0;
+
+  --card-theme-slate-bg: #f7f9fb;
+  --card-theme-slate-border: #dde3ea;
+  --card-theme-slate-image-bg: #eef2f6;
+  --card-theme-slate-brand: #334155;
+  --card-theme-slate-title: #1e293b;
+  --card-theme-slate-price: #0f172a;
+  --card-theme-slate-muted: #64748b;
+  --card-theme-slate-accent: #475569;
+  --card-theme-slate-hover-border: #c9d2dc;
+
+  --card-theme-stone-bg: #f8f6f3;
+  --card-theme-stone-border: #e6e1da;
+  --card-theme-stone-image-bg: #f1eee8;
+  --card-theme-stone-brand: #6b5b4f;
+  --card-theme-stone-title: #2f2a26;
+  --card-theme-stone-price: #1f1b18;
+  --card-theme-stone-muted: #7a726a;
+  --card-theme-stone-accent: #7c6f64;
+  --card-theme-stone-hover-border: #d6cfc4;
+
+  --card-theme-mist-bg: #f5f8fa;
+  --card-theme-mist-border: #dce7ee;
+  --card-theme-mist-image-bg: #ecf2f7;
+  --card-theme-mist-brand: #2f5d7c;
+  --card-theme-mist-title: #1f3864;
+  --card-theme-mist-price: #162a4a;
+  --card-theme-mist-muted: #5b728a;
+  --card-theme-mist-accent: #3a6ea5;
+  --card-theme-mist-hover-border: #c7d6e2;
+
+  --card-theme-ink-bg: #f2f2f4;
+  --card-theme-ink-border: #d9d9de;
+  --card-theme-ink-image-bg: #e9e9ed;
+  --card-theme-ink-brand: #373a40;
+  --card-theme-ink-title: #1b1d21;
+  --card-theme-ink-price: #111318;
+  --card-theme-ink-muted: #6b6f76;
+  --card-theme-ink-accent: #2b2e34;
+  --card-theme-ink-hover-border: #c4c4ca;
+}

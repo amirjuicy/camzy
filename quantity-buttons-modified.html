@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Quantity Control - Modified</title>
+</head>
+<body>
+
+<div class="flex items-center">
+    <div class="flex items-center justify-between user-select-none px-2 rounded-medium shadow-fab-button styles-module-scss-module__bgrzzq__ItemQuantity__box grow">
+        <div class="flex cursor-pointer opacity-50 pointer-events-none p-0 lg:p-0" data-testid="quantity-increase" data-cro-id="pdp-main-add-quantitiy">
+            <dds-icon name="content-add" color="brand/primary-base" aria-hidden="true" style="font-size: 18px;"></dds-icon>
+            <span class="ml-2 text-xs font-medium dark:text-neutral-200">افزایش</span>
+        </div>
+        <span class="flex flex-col items-center justify-between text-primary-500">
+            <span id="product-qty" class="relative flex items-center justify-center text-h5 styles-module-scss-module__bgrzzq__ItemQuantity__boxCount">۱</span>
+            <small class="text-caption text-neutral-300">حداکثر</small>
+        </span>
+        <div class="flex cursor-pointer" data-testid="quantity-decrease" data-cro-id="pdp-main-delete-quantitiy" onclick="ProductDetail.updateCartQty(-1); setTimeout(function(){ try { document.dispatchEvent(new CustomEvent("as_cart_change")); } catch(e){}, 0);">
+            <dds-icon name="action-delete" color="brand/primary-base" aria-hidden="true" style="font-size: 18px;"></dds-icon>
+            <span class="ml-2 text-xs font-medium dark:text-neutral-200">کاهش</span>
+        </div>
+    </div>
+    <div class="qty-selector qty-selector--buybox" style="display:none" aria-hidden="true">
+        <button type="button" class="qty-selector__btn qty-selector__btn--minus" onclick="ProductDetail.updateCartQty(-1)"></button>
+        <button type="button" class="qty-selector__btn qty-selector__btn--plus" onclick="ProductDetail.updateCartQty(1)"></button>
+    </div>
+</div>
+
+</body>
+</html>

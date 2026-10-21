@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="کمزی — فروشگاه تخصصی دوربین مداربسته">
+  <rect width="1200" height="630" fill="#D71920"/>
+  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#A61218" stroke-width="24"/>
+  <g transform="translate(1010 300) scale(1.05)">
+    <path d="M-116 -46a116 116 0 0 1 232 0z" fill="#FFFFFF"/>
+    <rect x="-132" y="-48" width="264" height="42" rx="21" fill="#FFFFFF"/>
+    <circle cx="0" cy="70" r="74" fill="#A61218"/>
+    <circle cx="0" cy="70" r="46" fill="#D71920"/>
+    <circle cx="-18" cy="52" r="15" fill="#E0F7FC"/>
+    <path d="M-22 128h44v34h-44z" fill="#FFFFFF"/>
+    <rect x="-62" y="158" width="124" height="24" rx="12" fill="#FFFFFF"/>
+  </g>
+  <text x="90" y="250" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="86" font-weight="800" fill="#FFFFFF" letter-spacing="2">CAMZY</text>
+  <text x="92" y="322" font-family="Vazirmatn, Tahoma, Arial, sans-serif" font-size="40" font-weight="700" fill="#D71920">کمزی</text>
+  <text x="92" y="392" font-family="Vazirmatn, Tahoma, Arial, sans-serif" font-size="30" fill="#CFE3F0">فروشگاه تخصصی دوربین مداربسته و سیستم‌های امنیتی</text>
+  <text x="92" y="446" font-family="Vazirmatn, Tahoma, Arial, sans-serif" font-size="23" fill="#F7B3AE">دوربین تحت شبکه و آنالوگ • دستگاه DVR و NVR • کنترل تردد</text>
+  <rect x="92" y="490" width="330" height="58" rx="29" fill="#D71920"/>
+  <text x="257" y="528" text-anchor="middle" font-family="Vazirmatn, Tahoma, Arial, sans-serif" font-size="24" font-weight="700" fill="#A61218">ضمانت اصالت کالا</text>
+</svg>

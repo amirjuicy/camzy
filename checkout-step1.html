@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta name="description" content="تکمیل اطلاعات مشتری در فرایند خرید کمزی.">
+  <link rel="canonical" href="https://www.camzy.com/checkout/step1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="کمزی">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:title" content="اطلاعات مشتری | کمزی">
+  <meta property="og:description" content="تکمیل اطلاعات مشتری در فرایند خرید کمزی.">
+  <meta property="og:url" content="https://www.camzy.com/checkout/step1">
+  <meta property="og:image" content="https://www.camzy.com/assets/images/brand/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="کمزی — فروشگاه تخصصی دوربین مداربسته و سیستم‌های امنیتی">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="اطلاعات مشتری | کمزی">
+  <meta name="twitter:description" content="تکمیل اطلاعات مشتری در فرایند خرید کمزی.">
+  <meta name="twitter:image" content="https://www.camzy.com/assets/images/brand/og-image.png">
+  <meta name="author" content="کمزی">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اطلاعات مشتری | کمزی</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/design-system.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/components.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="assets/css/pages.css">
+<style>
+body{font-family:Vazirmatn,system-ui,sans-serif;background:var(--bg-body);color:var(--text-primary);margin:0}
+.co-wrap{max-width:640px;margin:0 auto;padding:24px 16px 48px}
+.co-brand__logo{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-left:8px}.co-brand__logo svg{width:22px;height:22px}.co-brand__logo img{max-height:28px;width:auto}.co-brand{text-align:center;margin:12px 0 20px;font-weight:800;font-size:22px;color:var(--text-primary)}
+.co-steps{display:flex;gap:8px;margin-bottom:20px}
+.co-step{flex:1;text-align:center;font-size:12px;color:var(--text-muted)}
+.co-step i{display:flex;align-items:center;justify-content:center;width:30px;height:30px; border-radius: var(--radius-circle);background:var(--border-color-light);color:var(--text-secondary);font-style:normal;font-weight:700;margin:0 auto 6px}
+.co-step.on{color:var(--text-primary)}.co-step.on i{background:var(--color-primary);color:var(--text-inverse)}
+.co-step.done{color:var(--color-success)}.co-step.done i{background:var(--color-success);color:var(--text-inverse)}
+.co-card{background:var(--bg-surface);border:1px solid var(--border-color-light); border-radius: var(--radius-2xl);padding:24px;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.co-card h1{font-size:18px;margin:0 0 4px;color:var(--text-primary)}.co-card p.sub{color:var(--text-muted);font-size:13px;margin:0 0 18px}
+.form-row{display:flex;gap:12px}.form-row .form-group{flex:1}
+.form-group{margin-bottom:14px;display:flex;flex-direction:column;gap:6px}
+.input-label{font-size:13px;font-weight:600;color:var(--text-primary)}
+.err{font-size:12px;color:var(--color-danger);min-height:16px}
+.co-nav{display:flex;gap:12px;margin-top:8px}
+/* .btn sizing lives in assets/css/pages.css (.co-wrap .btn) */
+.btn-primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-dark)}
+.btn-primary:hover{background:var(--color-primary-light);border-color:var(--color-primary-light)}
+.btn-ghost{background:var(--color-white);border-color:var(--color-primary);color:var(--color-primary)}
+.btn-ghost:hover{background:var(--color-primary-50)}
+@media(max-width:560px){.form-row{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="co-wrap">
+<div class="co-brand" data-setting="store.name"><span class="co-brand__logo" data-store-logo><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="co-brand__name">کمزی</span></div>
+<div class="co-steps">
+<div class="co-step on"><i>۱</i>اطلاعات مشتری</div>
+<div class="co-step"><i>۲</i>آدرس ارسال</div>
+<div class="co-step"><i>۳</i>روش ارسال</div>
+<div class="co-step"><i>۴</i>پرداخت</div>
+</div>
+<div class="co-card">
+<h1>اطلاعات مشتری</h1>
+<p class="sub">سبد خرید ← <b>اطلاعات مشتری</b> ← آدرس ارسال ← روش ارسال ← پرداخت</p>
+<form id="step1-form" novalidate>
+<div class="form-row">
+<div class="form-group"><label class="input-label">نام *</label><input class="input" id="f-firstName" placeholder="نام"><span class="err" id="e-firstName"></span></div>
+<div class="form-group"><label class="input-label">نام خانوادگی *</label><input class="input" id="f-lastName" placeholder="نام خانوادگی"><span class="err" id="e-lastName"></span></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label class="input-label">موبایل *</label><input class="input" id="f-mobile" dir="ltr" placeholder="09XXXXXXXXX" inputmode="numeric"><span class="err" id="e-mobile"></span></div>
+<div class="form-group"><label class="input-label">ایمیل</label><input class="input" id="f-email" dir="ltr" placeholder="email@example.com" type="email"><span class="err" id="e-email"></span></div>
+</div>
+<div class="co-nav">
+<a class="btn btn-ghost" href="/cart" style="text-align:center;text-decoration:none;line-height:22px">بازگشت به سبد</a>
+<button class="btn btn-primary" type="submit">ادامه به آدرس ارسال</button>
+</div>
+</form>
+</div>
+</div>
+<script>
+/* Standalone checkout step — intentionally NO common.js (no site header/footer injection). */
+(function(){
+var K='as_checkout_draft';
+function load(){try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return{}}}
+function save(d){localStorage.setItem(K,JSON.stringify(d))}
+var d=load();
+['firstName','lastName','mobile','email'].forEach(function(k){if(d[k])document.getElementById('f-'+k).value=d[k]});
+
+// Check if cart is empty
+function getCartItems() {
+  var user=null;
+  try {
+    var s=JSON.parse(localStorage.getItem('as_session'));
+    if(s&&s.userId) user=s.user||{id:s.userId};
+  } catch(e) {}
+  var keys=user?['as_user_'+user.id+'_cart']:[];
+  var g=null;
+  try{g=localStorage.getItem('as_guest_session');}catch(e){}
+  if(g) keys.push('as_guest_cart_'+g);
+  for(var i=0;i<keys.length;i++){
+    try{
+      var c=JSON.parse(localStorage.getItem(keys[i]));
+      if(Array.isArray(c)&&c.length) return c;
+    }catch(e){}
+  }
+  return [];
+}
+var cart = getCartItems();
+if(cart.length === 0) {
+  window.location.href = '/cart';
+  return;
+}
+
+document.getElementById('step1-form').addEventListener('submit',function(e){
+e.preventDefault();var ok=true;
+function setErr(id,msg){document.getElementById(id).textContent=msg||'';if(msg)ok=false}
+var v=function(id){return document.getElementById(id).value.trim()};
+setErr('e-firstName',v('f-firstName')?'':'نام الزامی است.');
+setErr('e-lastName',v('f-lastName')?'':'نام خانوادگی الزامی است.');
+setErr('e-mobile',/^09\d{9}$/.test(v('f-mobile'))?'':'موبایل معتبر وارد کنید (09XXXXXXXXX).');
+var em=v('f-email');
+setErr('e-email',(em&&!/^\S+@\S+\.\S+$/.test(em))?'ایمیل معتبر نیست.':'');
+if(!ok)return;
+var cur=load();
+cur.firstName=v('f-firstName');cur.lastName=v('f-lastName');cur.mobile=v('f-mobile');cur.email=em;
+save(cur);
+location.href='/checkout/step2';
+});
+})();
+</script>
+  <script src="assets/js/store-logo.js?v=1"></script>
+<script src="assets/js/site-content.js"></script>
+</body>
+</html>

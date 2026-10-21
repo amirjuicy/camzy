@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img">
+  <rect width="400" height="400" fill="#F4F8FA"/>
+  <rect x="48" y="150" width="304" height="104" rx="14" fill="#D71920"/>
+  <rect x="48" y="150" width="304" height="104" rx="14" fill="none" stroke="#171717" stroke-width="3"/>
+  <g fill="#171717">
+    <rect x="70" y="182" width="38" height="40" rx="5"/><rect x="118" y="182" width="38" height="40" rx="5"/>
+    <rect x="166" y="182" width="38" height="40" rx="5"/><rect x="214" y="182" width="38" height="40" rx="5"/>
+    <rect x="262" y="182" width="38" height="40" rx="5"/>
+  </g>
+  <g fill="#D71920"><rect x="76" y="188" width="8" height="8" rx="2"/><rect x="124" y="188" width="8" height="8" rx="2"/>
+  <rect x="172" y="188" width="8" height="8" rx="2"/><rect x="220" y="188" width="8" height="8" rx="2"/>
+  <rect x="268" y="188" width="8" height="8" rx="2"/></g>
+  <rect x="312" y="182" width="24" height="40" rx="5" fill="#2A2A2A"/>
+  <g stroke="#94A6B8" stroke-width="6" stroke-linecap="round">
+    <path d="M96 254v26M240 254v26M324 254v26"/>
+  </g>
+</svg>

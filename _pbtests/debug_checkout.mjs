@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ headless: true, executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+const page = await browser.newPage();
+page.on('console', m=>{ if(m.type()==='error') console.log('ERR', m.text()); });
+await page.goto('http://127.0.0.1:3000/checkout-step2.html', { waitUntil: 'networkidle' });
+await page.waitForTimeout(2500);
+console.log('selects:', await page.locator('select').count());
+console.log('wrappers:', await page.locator('.addr-province-dd').count());
+console.log('triggers:', await page.locator('.addr-province-trigger').count());
+await browser.close();

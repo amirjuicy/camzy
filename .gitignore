@@ -1,0 +1,75 @@
+# ===========================================================================
+# Camzy — ignore rules
+# Runtime data, secrets and generated artifacts are never committed.
+# ===========================================================================
+
+# --- Dependencies ----------------------------------------------------------
+node_modules/
+
+# --- Runtime SQLite databases (live customer data) — never commit ----------
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.db-shm
+data/*.db-wal
+/data/backups/
+**/backups/
+
+# --- Runtime logs ----------------------------------------------------------
+*.log
+/server/logs/
+/logs/
+
+# --- User uploads & receipts (PII) — never commit ---------------------------
+# NOTE: anchored to the repo root so that the required
+# assets/images/uploads/store/ icons are NOT excluded.
+/uploads/
+/assets/images/uploads/*
+!/assets/images/uploads/store/
+
+# --- Secrets, tokens & credentials — never commit --------------------------
+.env
+.env.*
+*.pem
+*.key
+_live_session.json
+_repro_cred.json
+_repro*.json
+_get-token.mjs
+_repro*.mjs
+_debug_*.mjs
+_verify_order_detail.mjs
+
+# --- Test-run artifacts (test source under _pbtests/ is kept) --------------
+/test-results/
+/playwright-report/
+/_pbtests/shots/
+/_pbtests/*.txt
+
+# --- Root-level test screenshots (not referenced by the app) ----------------
+/final-*.png
+/probe-mobile.png
+/_checkout.png
+/_pdp_*.png
+/UsersINOAppDataLocalTemp*.png
+
+# --- Stray temp / scratch files at repo root -------------------------------
+/.txt
+/datetime
+/err.txt
+/out.txt
+/import-test.xlsx
+/empty_cart.json
+/populated_cart.json
+/test_empty_cart.json
+
+# --- Android / Flutter build output ----------------------------------------
+android-admin-app/.dart_tool/
+android-admin-app/build/
+android-admin-app/android/build/
+android-admin-app/android/.gradle/
+android-admin-app/android/app/build/
+android-admin-app/android/local.properties

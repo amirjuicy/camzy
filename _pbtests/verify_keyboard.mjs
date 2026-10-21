@@ -1,0 +1,15 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ headless: true, executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+const page = await browser.newPage();
+await page.goto('http://127.0.0.1:3000/shop.html', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1500);
+const trigger = page.locator('.addr-province-trigger').first();
+await trigger.focus();
+await trigger.press('Enter');
+await page.waitForTimeout(200);
+await page.keyboard.press('ArrowDown');
+await page.keyboard.press('ArrowDown');
+await page.keyboard.press('Enter');
+await page.waitForTimeout(300);
+console.log('keyboard selected:', await page.locator('#shop-sort').inputValue());
+await browser.close();

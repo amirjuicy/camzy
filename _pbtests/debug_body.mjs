@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ headless: true, executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+const page = await browser.newPage();
+page.on('console', m=>{ if(m.type()==='error') console.log('ERR', m.text()); });
+await page.goto('http://127.0.0.1:3000/checkout-step2.html', { waitUntil: 'networkidle' });
+await page.waitForTimeout(2500);
+const body = await page.locator('body').innerHTML();
+console.log('body len:', body.length);
+console.log('first 300:', body.slice(0,300).replace(/\s+/g,' '));
+console.log('select count:', await page.locator('select').count());
+console.log('has co-wrap:', body.includes('co-wrap'));
+await browser.close();

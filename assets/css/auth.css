@@ -1,0 +1,336 @@
+/* ================================================================
+   Camzy — Standalone Auth (login.html + register.html only)
+   Loaded ONLY on auth pages. Hides storefront chrome and renders
+   a clean, modern, premium centered auth box with subtle red
+   accents. Mobile behaves like a real app screen.
+   All functional IDs/classes used by auth.js are untouched.
+   ================================================================ */
+
+/* ── 1. Hide storefront chrome on auth pages only ───────────── */
+body.auth-standalone #site-header,
+body.auth-standalone #mobile-header,
+body.auth-standalone #site-footer,
+body.auth-standalone .site-header,
+body.auth-standalone .mobile-header,
+body.auth-standalone .site-footer,
+body.auth-standalone .promo-topbar,
+body.auth-standalone .mobile-menu,
+body.auth-standalone .drawer,
+body.auth-standalone .drawer-overlay,
+body.auth-standalone .mobile-bottom-nav,
+body.auth-standalone .chat-fab,
+body.auth-standalone .chat-panel,
+body.auth-standalone .top-progress {
+  display: none !important;
+}
+
+/* Keep toasts visible above the auth card */
+body.auth-standalone .toast-container {
+  z-index: 1200;
+}
+
+/* ── 2. Page canvas ─────────────────────────────────────────── */
+body.auth-standalone {
+  background:
+    radial-gradient(600px 320px at 50% -80px, rgba(215, 25, 32, 0.10), transparent 70%),
+    radial-gradient(480px 300px at 88% 110%, rgba(215, 25, 32, 0.06), transparent 70%),
+    radial-gradient(480px 300px at 12% 110%, rgba(0, 0, 0, 0.04), transparent 70%),
+    var(--color-gray-100, #f5f5f5);
+  min-height: 100dvh;
+  /* The shared header.css reserves 115px + promo-bar height of body padding
+     (and 76px bottom padding on mobile) for the storefront chrome that auth
+     pages hide via display:none. Auth pages must reset that reservation —
+     same convention as body:has(.account-layout) in account.css — otherwise
+     the auth box starts 155px below the viewport top and overflows the fold. */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+body.auth-standalone main {
+  min-height: 100dvh;
+  display: flex;
+}
+
+body.auth-standalone .auth-page {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  /* Vertical centering comes from margin-block:auto on .auth-box below:
+     auto margins center the box when it fits, and top-align it (so the page
+     can scroll) when the box is taller than the viewport — align-items:center
+     would clip the overflowing top off-screen. */
+  justify-content: center;
+  padding: 40px 16px;
+  background: transparent;
+  position: relative;
+}
+
+/* subtle dotted texture, CSS-only */
+body.auth-standalone .auth-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(560px 380px at 50% 30%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(560px 380px at 50% 30%, black 30%, transparent 75%);
+}
+
+/* ── 3. Premium card ────────────────────────────────────────── */
+body.auth-standalone .auth-box {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  /* Auto block margins: vertical centering that never clips — when the box
+     is taller than the viewport the margins collapse to 0, the box stays at
+     the top and the page scrolls to reveal all of it. */
+  margin-block: auto;
+  background: #fff;
+  border: 1px solid #ececec; border-radius: var(--radius-2xl);
+  box-shadow:
+    0 24px 60px rgba(17, 17, 17, 0.10),
+    0 2px 6px rgba(17, 17, 17, 0.05);
+  padding: 28px 28px 24px;
+  overflow: hidden;
+  animation: auth-rise 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* thin premium brand accent bar on top */
+body.auth-standalone .auth-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary-dark, #A61218), var(--color-primary, #D71920) 45%, var(--color-primary-light, #E34A50));
+}
+
+/* ── Back link (app-like top row) ───────────────────────────── */
+body.auth-standalone .auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-bottom: 18px;
+  transition: color 150ms ease-out;
+}
+body.auth-standalone .auth-back:hover { color: var(--text-primary); }
+body.auth-standalone .auth-back svg { width: 16px; height: 16px; }
+
+/* ── Brand ──────────────────────────────────────────────────── */
+body.auth-standalone .auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+body.auth-standalone .auth-brand__badge {
+  width: 56px;
+  height: 56px; border-radius: var(--radius-2xl);
+  background: linear-gradient(135deg, var(--color-primary, #D71920), var(--color-primary-light, #E34A50));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-inverse, #fff);
+  box-shadow: 0 10px 24px rgba(215, 25, 32, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+body.auth-standalone .auth-brand__badge svg { width: 28px; height: 28px; }
+body.auth-standalone .auth-brand__name {
+  font-weight: var(--font-weight-black);
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+body.auth-standalone .auth-brand__tag {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  background: var(--color-gray-50, #fafafa);
+  border: 1px solid var(--border-color-light, #eee);
+  padding: 3px 12px;
+  border-radius: var(--radius-full);
+}
+
+/* older logo block (kept for compatibility if markup remains) */
+body.auth-standalone .auth-box__logo { margin-bottom: 14px; }
+
+body.auth-standalone .auth-box__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-black);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+body.auth-standalone .auth-subtitle {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+
+/* ── Form polish (IDs unchanged) ────────────────────────────── */
+body.auth-standalone .auth-box .input-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  display: block;
+}
+body.auth-standalone .auth-box .input {
+  min-height: 48px;
+  background: #fafafa;
+  border: 1.5px solid #e6e6e6;
+  padding: 12px 14px;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out, background 150ms ease-out;
+}
+body.auth-standalone .auth-box .input::placeholder { color: #b5b5b5; }
+body.auth-standalone .auth-box .input:focus {
+  background: #fff;
+  border-color: var(--color-primary, #D71920);
+  box-shadow: 0 0 0 4px rgba(215, 25, 32, 0.15);
+  outline: none;
+}
+body.auth-standalone .auth-box .form-group { margin-bottom: 14px; }
+body.auth-standalone .auth-box .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+body.auth-standalone .auth-box .btn-primary.btn-lg {
+  min-height: 50px; border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+  color: var(--text-inverse, #fff);
+  box-shadow: 0 10px 22px rgba(215, 25, 32, 0.28);
+  transition: transform 120ms ease-out, box-shadow 200ms ease-out, background 150ms ease-out;
+}
+body.auth-standalone .auth-box .btn-primary.btn-lg:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(215, 25, 32, 0.34);
+}
+body.auth-standalone .auth-box .btn-primary.btn-lg:active { transform: translateY(0) scale(0.99); }
+
+body.auth-standalone .auth-box .btn-secondary.btn-block {
+  min-height: 48px; border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-semibold);
+  border-width: 1.5px;
+}
+
+/* remember / forgot row */
+body.auth-standalone .auth-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 14px;
+}
+body.auth-standalone .auth-meta-row .filter-option { padding: 0; }
+body.auth-standalone .auth-link {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary-dark, #A61218);
+  font-weight: var(--font-weight-semibold);
+}
+body.auth-standalone .auth-link:hover { color: var(--text-primary); text-decoration: underline; }
+
+body.auth-standalone .auth-divider { margin: 18px 0 14px; }
+body.auth-standalone .auth-box__footer { margin-top: 18px; font-size: var(--font-size-sm); }
+body.auth-standalone .auth-box__footer a {
+  color: var(--color-primary-dark, #A61218);
+  font-weight: var(--font-weight-bold);
+}
+
+/* trust note under the button */
+body.auth-standalone .auth-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+body.auth-standalone .auth-trust svg { width: 14px; height: 14px; color: var(--color-primary-dark, #A61218); }
+
+/* ── 4. Mobile: real app screen ─────────────────────────────── */
+@media (max-width: 560px) {
+  body.auth-standalone {
+    background: #fff;
+  }
+  body.auth-standalone main { display: block; }
+  body.auth-standalone .auth-page {
+    min-height: 100dvh;
+    padding: 0;
+    align-items: stretch;
+  }
+  body.auth-standalone .auth-page::before { display: none; }
+  body.auth-standalone .auth-box {
+    max-width: none;
+    min-height: 100dvh;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding:
+      calc(14px + env(safe-area-inset-top, 0px))
+      20px
+      calc(28px + env(safe-area-inset-bottom, 0px));
+    animation: none;
+    display: flex;
+    flex-direction: column;
+  }
+  body.auth-standalone .auth-box::before {
+    height: 3px;
+  }
+  /* app top bar feel */
+  body.auth-standalone .auth-back {
+    margin-bottom: 14px;
+    min-height: 44px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+  }
+  body.auth-standalone .auth-brand { margin-bottom: 16px; }
+  body.auth-standalone .auth-brand__badge {
+    width: 64px;
+    height: 64px; border-radius: var(--radius-2xl);
+  }
+  body.auth-standalone .auth-box__title { font-size: 22px; }
+  body.auth-standalone .auth-box .input {
+    min-height: 52px;
+    font-size: 16px; /* prevents iOS auto-zoom */var(--radius-md);
+  }
+  body.auth-standalone .auth-box .btn-primary.btn-lg,
+  body.auth-standalone .auth-box .btn-secondary.btn-block {
+    min-height: 54px; border-radius: var(--radius-lg);
+    font-size: var(--font-size-md);
+  }
+  body.auth-standalone .auth-box .form-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  /* bottom home-indicator feel (app-like finish) */
+  body.auth-standalone .auth-box::after {
+    content: '';
+    display: block;
+    width: 120px;
+    height: 4px; border-radius: var(--radius-full);
+    background: #e8e8e8;
+    margin: 26px auto 0;
+  }
+}
+
+@media (max-width: 360px) {
+  body.auth-standalone .auth-box { padding-left: 16px; padding-right: 16px; }
+  body.auth-standalone .auth-box .form-row { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.auth-standalone .auth-box { animation: none; }
+}

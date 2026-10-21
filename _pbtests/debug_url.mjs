@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ headless: true, executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe' });
+const page = await browser.newPage();
+page.on('console', m=>console.log('C', m.type(), m.text()));
+page.on('requestfailed', r=>console.log('RF', r.url()));
+await page.goto('http://127.0.0.1:3000/checkout-step2.html', { waitUntil: 'domcontentloaded' });
+console.log('initial url:', page.url());
+await page.waitForTimeout(3000);
+console.log('after wait url:', page.url());
+console.log('has co-wrap:', await page.locator('.co-wrap').count());
+console.log('has store-logo script:', await page.locator('script[src*="store-logo"]').count());
+await browser.close();
