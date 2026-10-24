@@ -51,9 +51,18 @@ body.admin-body{display:flex;flex-direction:column;height:100%;min-height:0;over
    the settings panel takes the rest and scrolls independently. */
 @media (max-width:1024px){.pb-topbar{flex-wrap:wrap}.pb-layout{flex-direction:column}.pb-stage{order:1;flex:0 0 55%;height:55%;padding:12px;overflow-y:auto}.pb-side{order:2;width:100%;flex:1 1 auto;min-height:0;border-top:1px solid var(--border,#e5e7eb)}.pb-frame{max-width:100%}}
 @media (max-width:600px){.pb-topbar{gap:8px;padding:10px 12px}.pb-topbar strong#pb-title{width:100%;font-size:14px}.pb-devices,.pb-tools{width:100%}.pb-devices button,.pb-tools button{flex:1;font-size:12px}.pb-save{width:100%}.pb-grid{grid-template-columns:1fr}}
+/* Boot gate: neutral loader while the server session is verified. */
+#pb-boot{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f3f4f6;transition:opacity .25s ease}
+#pb-boot .pb-boot__box{display:flex;flex-direction:column;align-items:center;gap:14px;color:#6b7280;font-size:14px;font-family:Vazirmatn,Tahoma,system-ui,sans-serif}
+#pb-boot .pb-boot__spin{width:34px;height:34px;border-radius:50%;border:3px solid #e5e7eb;border-top-color:#f59e0b;animation:pb-boot-spin .9s linear infinite}
+@keyframes pb-boot-spin{to{transform:rotate(360deg)}}
+#pb-boot.is-done{opacity:0;pointer-events:none}
 </style>
 </head>
 <body class="admin-body">
+<div id="pb-boot" role="status" aria-live="polite">
+  <div class="pb-boot__box"><span class="pb-boot__spin" aria-hidden="true"></span><span>در حال بررسی دسترسی…</span></div>
+</div>
 <div class="pb-topbar">
   <a href="index.html#/visual-editor" title="بازگشت">→ بازگشت به ویرایشگر بصری</a>
   <strong id="pb-title">ویرایش بصری</strong>
@@ -412,8 +421,28 @@ body.admin-body{display:flex;flex-direction:column;height:100%;min-height:0;over
   if(redoBtn) redoBtn.addEventListener('click',doRedo);
   if(delBtn) delBtn.addEventListener('click',doDelete);
   function tok(){ try{var s=JSON.parse(localStorage.getItem('as_admin_session')||'null');return s&&s.token||'';}catch(e){return '';} }
-  // auth guard (same as admin panel — do not change auth logic)
-  try{var s=JSON.parse(localStorage.getItem('as_admin_session')||'null');if(!s||!s.token){location.replace('/login.html');return;}}catch(e){location.replace('/login.html');return;}
+  // auth guard: confirmed by the server against the DB-backed session
+  // (HttpOnly cookie or Bearer token). The localStorage flag is only a cache
+  // and is never treated as proof of authentication on its own.
+  function pbBootDone(){
+    var b=document.getElementById('pb-boot');
+    if(!b) return;
+    b.classList.add('is-done');
+    setTimeout(function(){ var el=document.getElementById('pb-boot'); try{ if(el&&el.parentNode) el.parentNode.removeChild(el); }catch(_){} },300);
+  }
+  function pbBootFail(){
+    try{ localStorage.removeItem('as_admin_session'); }catch(_){}
+    location.replace('/login.html');
+  }
+  try{
+    var t0=tok();
+    fetch('/api/admin/me', t0?{headers:{'Authorization':'Bearer '+t0}}:{credentials:'same-origin'})
+      .then(function(r){
+        if(r&&r.ok){ pbBootDone(); }
+        else { pbBootFail(); }
+      })
+      .catch(function(){ pbBootFail(); });
+  }catch(e){ pbBootFail(); }
   if(!slug&&!staticFile){ statusEl.textContent='نامک صفحه مشخص نشده است.'; return; }
   titleEl.textContent='ویرایش بصری: '+(staticFile||slug);
   iframe.src=staticFile?'../'+staticFile:'../page.html?slug='+encodeURIComponent(slug);

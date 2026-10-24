@@ -2654,8 +2654,10 @@ body.is-site-loading {
 .bc-item{position:relative;cursor:pointer;outline:none}
 .bc-item input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
 .bc-card{
-  position:relative;overflow:hidden; border-radius: var(--radius-2xl);padding:16px;color:#fff;
-  background:linear-gradient(135deg,var(--bc-a,#1F2937) 0%,var(--bc-b,#374151) 55%,var(--bc-c,#111827) 100%);
+  --bc-a:#1F2937;--bc-b:#374151;--bc-c:#111827;
+  --bc-ink:#FFFFFF;--bc-soft:rgba(31,41,55,.14);--bc-line:rgba(31,41,55,.38);
+  position:relative;overflow:hidden; border-radius: var(--radius-2xl);padding:16px;color:var(--bc-ink);
+  background:linear-gradient(135deg,var(--bc-a) 0%,var(--bc-b) 55%,var(--bc-c) 100%);
   box-shadow:0 10px 24px rgba(17,24,39,.22);
   transition:transform .18s ease,box-shadow .18s ease,outline-color .18s ease;
   outline:2px solid transparent;outline-offset:3px;
@@ -2669,6 +2671,45 @@ body.is-site-loading {
 .bc-card::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(120% 90% at 85% -10%,rgba(255,255,255,.28),transparent 55%),
              radial-gradient(80% 60% at 0% 110%,rgba(255,255,255,.12),transparent 60%)}
+
+/* ── Card templates (admin selectable, rendered on the storefront) ──── */
+/* solid: one flat brand colour */
+.bc-card[data-bc-template="solid"]{background:var(--bc-a)}
+.bc-card[data-bc-template="solid"]::before{
+  background:radial-gradient(120% 90% at 12% -10%,rgba(255,255,255,.22),transparent 55%)}
+
+/* glass: translucent frosted panel */
+.bc-card[data-bc-template="glass"]{
+  background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.04)),var(--bc-a);
+  -webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);
+  border:1px solid rgba(255,255,255,.45);
+  box-shadow:0 10px 26px rgba(17,24,39,.16)
+}
+.bc-card[data-bc-template="glass"]::before{
+  background:linear-gradient(120deg,rgba(255,255,255,.4),transparent 42%)}
+
+/* minimal: light tinted card with dark ink and a thin tinted border */
+.bc-card[data-bc-template="minimal"]{
+  background:linear-gradient(160deg,#FFFFFF 0%,var(--bc-soft) 100%);
+  color:#111827;border:1px solid var(--bc-line);
+  box-shadow:0 6px 18px rgba(17,24,39,.08)
+}
+.bc-card[data-bc-template="minimal"]::before{display:none}
+.bc-card[data-bc-template="minimal"] .bc-chip{background:linear-gradient(135deg,#E5E7EB,#9CA3AF)}
+.bc-card[data-bc-template="minimal"] .bc-bank__logo{border:1px solid var(--bc-line)}
+.bc-card[data-bc-template="minimal"] .bc-bank__logo svg{color:var(--bc-a)}
+.bc-card[data-bc-template="minimal"] .bc-holder b{opacity:.55}
+.bc-card[data-bc-template="minimal"] .bc-copy{
+  border-color:var(--bc-line);background:rgba(255,255,255,.72);color:var(--bc-a)}
+
+/* bold: heavy colour block with a diagonal accent */
+.bc-card[data-bc-template="bold"]{
+  background:linear-gradient(112deg,var(--bc-c) 0 26%,var(--bc-a) 26% 100%);
+  border-radius:var(--radius-xl)
+}
+.bc-card[data-bc-template="bold"]::before{
+  background:linear-gradient(112deg,transparent 0 26%,rgba(255,255,255,.18) 26% 33%,transparent 33%)}
+.bc-card[data-bc-template="bold"] .bc-num{font-weight:700;letter-spacing:1.5px}
 .bc-top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative}
 .bc-bank{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
 .bc-bank__logo{width:34px;height:34px; border-radius: var(--radius-lg);background:rgba(255,255,255,.92);flex:0 0 auto;

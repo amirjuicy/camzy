@@ -256,6 +256,29 @@ function bindReceipt(host){
   var rm=host.querySelector('[data-receipt-remove]');
   if(rm)rm.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();clearReceipt();receiptError('');renderCards();});
 }
+var BC_TEMPLATES=['classic','solid','glass','minimal','bold'];
+function bcParse(hex){var m=/^#?([0-9a-f]{6})$/i.exec(String(hex||''));if(!m)return null;var n=parseInt(m[1],16);return [(n>>16)&255,(n>>8)&255,n&255];}
+function bcAdj(rgb,amt){return rgb.map(function(v){var n=amt<0?v*(1+amt):v+(255-v)*amt;return Math.max(0,Math.min(255,Math.round(n)));});}
+function bcLum(rgb){var f=rgb.map(function(v){v=v/255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*f[0]+0.7152*f[1]+0.0722*f[2];}
+function bcCss(rgb){return 'rgb('+rgb.join(',')+')';}
+function bcTpl(t){t=String(t||'').toLowerCase();return BC_TEMPLATES.indexOf(t)===-1?'classic':t;}
+/* Mirrors the admin preview math so both cards look identical. */
+function bcStyle(template,hex){
+  var rgb=bcParse(hex); if(!rgb)return '';
+  template=bcTpl(template);
+  var light=bcLum(rgb)>0.62;
+  var disp=light&&template!=='glass'&&template!=='minimal'?bcAdj(rgb,-0.5):rgb;
+  var a=template==='minimal'?rgb:disp;
+  var b=bcAdj(disp,-0.18);
+  var c=bcAdj(disp,-0.42);
+  var ink=template==='minimal'?'#111827'
+    :template==='glass'?(bcLum(bcAdj(rgb,0.3))>0.62?'#111827':'#FFFFFF')
+    :(bcLum(disp)>0.62?'#111827':'#FFFFFF');
+  return '--bc-a:'+bcCss(a)+';--bc-b:'+bcCss(b)+';--bc-c:'+bcCss(c)
+    +';--bc-soft:rgba('+rgb.join(',')+',0.14)'
+    +';--bc-line:rgba('+rgb.join(',')+',0.38)'
+    +';--bc-ink:'+ink+';';
+}
 function renderCards(){
   var host=document.getElementById('pay-cards');
   var sel=document.querySelector('input[name="pay"]:checked');
@@ -272,9 +295,11 @@ function renderCards(){
     +'<div class="bc-grid" role="radiogroup" aria-label="انتخاب کارت بانکی">'
     +Cards.map(function(c){
       var act=String(c.id)===String(cardId);
+      var tpl=bcTpl(c.template);
+      var vars=bcStyle(tpl,c.color);
       return '<label class="bc-item'+(act?' is-active':'')+'" data-card-id="'+c.id+'">'
         +'<input type="radio" name="bankcard" value="'+c.id+'"'+(act?' checked':'')+'>'
-        +'<div class="bc-card">'
+        +'<div class="bc-card" data-bc-template="'+tpl+'"'+(vars?' style="'+vars+'"':'')+'>'
         +  '<div class="bc-top"><span class="bc-bank"><span class="bc-bank__logo">'+bankLogoHtml(c)+'</span>'+esc(c.bankName)+'</span><span class="bc-chip"></span></div>'
         +  '<div class="bc-num" data-num="'+esc(c.cardNumberFormatted||c.cardNumber||'')+'">'+(c.cardNumberFormatted||c.cardNumber||'')+'</div>'
         +  '<div class="bc-foot"><span class="bc-holder">'+(c.cardHolder?'<b>به نام</b>'+esc(c.cardHolder):'')+'</span>'

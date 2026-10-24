@@ -7,6 +7,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { getDb } = require('./db');
 const { migrate } = require('./migrate');
+const backupManager = require('./backup-manager');
 
 migrate();
 const db = getDb();
@@ -929,6 +930,7 @@ api.post('/auth/login', (req, res) => {
       try { ensureAdminSessions(); } catch (_) {}
       const adminToken = crypto.randomBytes(32).toString('hex');
       db.prepare("INSERT INTO admin_sessions (token, admin_id, expires_at) VALUES (?, ?, datetime('now', '+30 days'))").run(adminToken, adminRow.id);
+      setAdminTokenCookie(req, res, adminToken);
       return res.json({ user: { id: 'admin:'+adminRow.id, firstName: adminRow.name, lastName: '', mobile: adminRow.username, email: '', joinDate: '' }, token: adminToken, isAdmin: true, admin: mapAdmin(adminRow), adminToken });
     }
   } catch (_) {}
@@ -947,6 +949,21 @@ api.post('/auth/login', (req, res) => {
 api.post('/auth/logout', (req, res) => {
   const auth = getAuthUser(req);
   if (auth) db.prepare('DELETE FROM customer_sessions WHERE token = ?').run(auth.token);
+  // A storefront login mirrors the admin token into the customer session slot.
+  // If that (or the panel cookie) is being revoked, revoke the admin half too
+  // and drop the panel cookie so /admin/ stops being accessible after logout.
+  try {
+    const cookies = parseCookies(req);
+    const bearer = String(req.headers.authorization || '').startsWith('Bearer ')
+      ? req.headers.authorization.slice(7) : null;
+    const candidates = [bearer, cookies[ADMIN_COOKIE]].filter(Boolean);
+    let revokedAdmin = false;
+    for (const t of candidates) {
+      const row = db.prepare('SELECT admin_id FROM admin_sessions WHERE token = ?').get(t);
+      if (row) { db.prepare('DELETE FROM admin_sessions WHERE token = ?').run(t); revokedAdmin = true; }
+    }
+    if (cookies[ADMIN_COOKIE] || revokedAdmin) clearAdminTokenCookie(res);
+  } catch (_) {}
   res.json({ ok: true });
 });
 
@@ -959,6 +976,44 @@ api.get('/auth/me', (req, res) => {
 // ── Admin auth (token-based, backed by admin_users + bcrypt) ──
 // Roles + per-section permissions, enforced server-side in requireAdmin.
 // migrate existing accounts safely: new columns default to active + role-based perms.
+
+// ── Admin session cookie ──
+// Panel tokens normally travel in the Authorization header set by JS from
+// localStorage. A top-level navigation to /admin cannot send that header, so
+// the server would have no way to authenticate the admin HTML itself. A
+// HttpOnly cookie carrying the same DB-backed session token closes that gap:
+// the server can verify every admin page request and unauthenticated visitors
+// never receive the panel HTML at all (the flash bug). The cookie adds no new
+// trust: the value is still validated against admin_sessions on every request.
+const ADMIN_COOKIE = 'cam_admin_token';
+const ADMIN_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // matches the 30-day session rows
+
+function parseCookies(req) {
+  const out = {};
+  const header = req && req.headers && req.headers.cookie;
+  if (!header) return out;
+  for (const part of String(header).split(';')) {
+    const i = part.indexOf('=');
+    if (i === -1) continue;
+    const k = part.slice(0, i).trim();
+    if (!k) continue;
+    let v = part.slice(i + 1).trim();
+    try { v = decodeURIComponent(v); } catch (_) {}
+    out[k] = v;
+  }
+  return out;
+}
+
+function setAdminTokenCookie(req, res, token) {
+  if (!token) return;
+  const secure = (req.secure || String(req.headers['x-forwarded-proto'] || '') === 'https') ? '; Secure' : '';
+  res.setHeader('Set-Cookie',
+    ADMIN_COOKIE + '=' + token + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + ADMIN_COOKIE_MAX_AGE + secure);
+}
+
+function clearAdminTokenCookie(res) {
+  res.setHeader('Set-Cookie', ADMIN_COOKIE + '=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+}
 function ensureAdminColumns() {
   try {
     const cols = db.prepare('PRAGMA table_info(admin_users)').all().map((c) => c.name);
@@ -970,7 +1025,7 @@ try { ensureAdminColumns(); } catch (_) {}
 // One key per admin sidebar view (data-view). 'dashboard' needs no API section.
 const ADMIN_SECTIONS = ['dashboard', 'orders', 'transactions', 'reports', 'discounts', 'products',
   'categories', 'users', 'notifications', 'tickets', 'contact-messages', 'chatbot-messages', 'brands', 'articles', 'reviews',
-  'content', 'home', 'gallery', 'admins', 'logs', 'settings', 'store-info', 'sms', 'seo'];
+  'content', 'home', 'gallery', 'admins', 'logs', 'settings', 'store-info', 'sms', 'seo', 'backup-update'];
 const ROLE_PERMS = {
   superadmin: { sections: 'all', readonly: false },
   admin: { sections: 'all', readonly: false },
@@ -1024,7 +1079,14 @@ ensureAdminSessions();
 
 function getAdminAuth(req) {
   const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  let token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  // The HttpOnly cookie carries the same DB-backed token for top-level
+  // navigations (which cannot set an Authorization header). Either way the
+  // token is verified against admin_sessions below — client storage is never
+  // trusted on its own.
+  if (!token) {
+    try { const c = parseCookies(req); if (c && c[ADMIN_COOKIE]) token = c[ADMIN_COOKIE]; } catch (_) {}
+  }
   if (!token) return null;
   try { ensureAdminSessions(); } catch (_) {}
   const sess = db.prepare("SELECT admin_id FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')").get(token);
@@ -1050,24 +1112,29 @@ api.post('/admin/login', (req, res) => {
   const token = crypto.randomBytes(32).toString('hex');
   db.prepare("INSERT INTO admin_sessions (token, admin_id, expires_at) VALUES (?, ?, datetime('now', '+30 days'))")
     .run(token, row.id);
+  setAdminTokenCookie(req, res, token);
   res.json({ admin: mapAdmin(row), token });
 });
 
 api.post('/admin/logout', (req, res) => {
   const auth = getAdminAuth(req);
   if (auth) db.prepare('DELETE FROM admin_sessions WHERE token = ?').run(auth.token);
+  clearAdminTokenCookie(res);
   res.json({ ok: true });
 });
 
 api.get('/admin/me', (req, res) => {
   const auth = getAdminAuth(req);
   if (!auth) return res.status(401).json({ error: 'Not authenticated' });
+  // Refresh the panel cookie so top-level navigations keep a valid one.
+  setAdminTokenCookie(req, res, auth.token);
   res.json({ admin: mapAdmin(auth.row) });
 });
 
 api.get('/admin/validate', (req, res) => {
   const auth = getAdminAuth(req);
   if (!auth) return res.json({ valid: false });
+  setAdminTokenCookie(req, res, auth.token);
   res.json({ valid: true, admin: mapAdmin(auth.row) });
 });
 
@@ -1079,6 +1146,11 @@ api.get('/admin/validate', (req, res) => {
 const ADMIN_SELF_PATHS = new Set(['/admin/me', '/admin/validate', '/admin/logout', '/admin/password']);
 const ADMIN_SECTION_PREFIXES = [
   ['/admin/logs', 'logs'],
+  ['/admin/backup', 'backup-update'],
+  ['/admin/backups', 'backup-update'],
+  ['/admin/backup-update', 'backup-update'],
+  ['/admin/update', 'backup-update'],
+  ['/admin/updates', 'backup-update'],
   ['/admin/users', 'admins'],
   ['/admin/discounts', 'discounts'],
   ['/admin/bank-cards', 'settings'],
@@ -1190,6 +1262,184 @@ api.get('/admin/logs/files', requireAdmin, (req,res)=>{
   res.json({ files: listLogFiles(type) });
 });
 
+// ── Backup & update management (admin-only) ──
+const updateUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/\.zip$/i.test(String(file && file.originalname || ''))) cb(null, true);
+    else cb(new Error('Only .zip files are allowed'));
+  }
+});
+function sendBackupDownload(req, res) {
+  try {
+    const file = req.params && req.params.file ? req.params.file : req.query.file;
+    const full = backupManager.resolveBackupFile(file);
+    res.setHeader('Content-Disposition', 'attachment; filename="' + path.basename(full) + '"');
+    res.setHeader('Content-Type', 'application/zip');
+    return res.sendFile(full);
+  } catch (e) {
+    return res.status(400).json({ error: String(e && e.message ? e.message : e) });
+  }
+}
+
+const backupBases = ['/admin/backup', '/admin/backups', '/admin/backup-update'];
+for (const base of backupBases) {
+  api.get(base + '/status', requireAdmin, async (req, res) => {
+    try {
+      res.json({
+        ok: true,
+        version: backupManager.getAppVersion(),
+        latestBackup: backupManager.getLatestBackup(),
+        backups: backupManager.listBackups(),
+        update: await backupManager.checkUpdate()
+      });
+    } catch (e) {
+      res.status(500).json({ error: String(e && e.message ? e.message : e) });
+    }
+  });
+
+  api.get(base + '/list', requireAdmin, (req, res) => {
+    try { res.json({ backups: backupManager.listBackups() }); }
+    catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+  });
+
+  api.post(base + '/create', requireAdmin, async (req, res) => {
+    try {
+      const meta = await backupManager.createBackup({ keep: 20 });
+      res.json({ ok: true, backup: meta, latestBackup: backupManager.getLatestBackup() });
+    } catch (e) {
+      res.status(500).json({ error: String(e && e.message ? e.message : e) });
+    }
+  });
+
+  api.get(base + '/download', requireAdmin, (req, res) => sendBackupDownload(req, res));
+  api.get(base + '/download/:file', requireAdmin, (req, res) => sendBackupDownload(req, res));
+
+  api.post(base + '/rollback', requireAdmin, async (req, res) => {
+    try {
+      const file = (req.body && (req.body.file || req.body.filename)) || (backupManager.getLatestBackup() && backupManager.getLatestBackup().filename);
+      const r = await backupManager.rollbackBackup(file);
+      res.json(Object.assign({ ok: true }, r));
+    } catch (e) {
+      res.status(500).json({ error: String(e && e.message ? e.message : e) });
+    }
+  });
+}
+
+// Update package management (upload/list/delete)
+const updateManageBases = ['/admin/updates', '/admin/update', '/admin/backup/updates', '/admin/backups/updates', '/admin/backup-update/updates'];
+for (const base of updateManageBases) {
+  api.get(base, requireAdmin, async (req, res) => {
+    try { res.json({ ok: true, packages: await backupManager.listUpdatePackages() }); }
+    catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+  });
+  api.get(base + '/list', requireAdmin, async (req, res) => {
+    try { res.json({ ok: true, packages: await backupManager.listUpdatePackages() }); }
+    catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+  });
+  api.post(base + '/upload', requireAdmin, (req, res, next) => {
+    updateUpload.single('file')(req, res, (err) => {
+      if (err) return res.status(400).json({ error: String(err && err.message ? err.message : err) });
+      next();
+    });
+  }, async (req, res) => {
+    try {
+      if (!req.file || !req.file.buffer) return res.status(400).json({ error: 'No file uploaded' });
+      const result = await backupManager.saveUploadedUpdate(req.file.buffer, req.file.originalname);
+      res.json(Object.assign({ ok: true }, result, { packages: await backupManager.listUpdatePackages() }));
+    } catch (e) {
+      res.status(400).json({ error: String(e && e.message ? e.message : e) });
+    }
+  });
+  api.delete(base + '/:file', requireAdmin, async (req, res) => {
+    try {
+      backupManager.deleteUpdatePackage(req.params.file);
+      res.json({ ok: true, packages: await backupManager.listUpdatePackages() });
+    } catch (e) {
+      res.status(400).json({ error: String(e && e.message ? e.message : e) });
+    }
+  });
+  api.post(base + '/delete', requireAdmin, async (req, res) => {
+    try {
+      const body = req.body || {};
+      backupManager.deleteUpdatePackage(body.file || body.filename);
+      res.json({ ok: true, packages: await backupManager.listUpdatePackages() });
+    } catch (e) {
+      res.status(400).json({ error: String(e && e.message ? e.message : e) });
+    }
+  });
+}
+
+// update endpoints
+const updateBases = ['/admin/update', '/admin/backup/update', '/admin/backups/update', '/admin/backup-update/update'];
+for (const base of updateBases) {
+  api.get(base + '/check', requireAdmin, async (req, res) => {
+    try { res.json(await backupManager.checkUpdate(req.query && (req.query.package || req.query.file || req.query.filename))); }
+    catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+  });
+  api.post(base + '/check', requireAdmin, async (req, res) => {
+    try {
+      const body = req.body || {};
+      res.json(await backupManager.checkUpdate(body.package || body.file || body.filename));
+    } catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+  });
+  api.post(base + '/apply', requireAdmin, async (req, res) => {
+    try {
+      const body = req.body || {};
+      const r = await backupManager.applyUpdate({ confirm: body.confirm, package: body.package || body.file || body.filename });
+      res.json(r);
+    } catch (e) {
+      res.status(400).json({ error: String(e && e.message ? e.message : e) });
+    }
+  });
+  api.post(base + '/rollback', requireAdmin, async (req, res) => {
+    try {
+      const body = req.body || {};
+      const file = body.file || body.filename || (backupManager.getLatestBackup() && backupManager.getLatestBackup().filename);
+      const r = await backupManager.rollbackBackup(file);
+      res.json(Object.assign({ ok: true }, r));
+    } catch (e) {
+      res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+  });
+}
+
+// convenience combined alias used by UI
+api.get('/admin/backup-update/status', requireAdmin, async (req, res) => {
+  try {
+    res.json({ ok: true, version: backupManager.getAppVersion(), latestBackup: backupManager.getLatestBackup(), backups: backupManager.listBackups(), update: await backupManager.checkUpdate() });
+  } catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+});
+
+// ── GitHub Releases updater (admin-only) ──
+api.get('/admin/updates/github/config', requireAdmin, (req, res) => {
+  try {
+    const cfg = backupManager.getGitHubConfig();
+    res.json({ ok: true, owner: cfg.owner, repo: cfg.repo, repository: (cfg.owner && cfg.repo) ? (cfg.owner + '/' + cfg.repo) : '', tokenConfigured: !!cfg.token });
+  } catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+});
+
+api.get('/admin/updates/github/check', requireAdmin, async (req, res) => {
+  try {
+    res.json(await backupManager.checkGitHubUpdate());
+  } catch (e) { res.status(e && e.status ? e.status : 502).json({ error: String(e && e.message ? e.message : e) }); }
+});
+
+api.post('/admin/updates/github/check', requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    res.json(await backupManager.checkGitHubUpdate({ asset: body.asset || body.assetName }));
+  } catch (e) { res.status(e && e.status ? e.status : 502).json({ error: String(e && e.message ? e.message : e) }); }
+});
+
+api.post('/admin/updates/github/download', requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    const r = await backupManager.downloadGitHubReleaseAsset({ asset: body.asset || body.assetName, assetName: body.assetName });
+    res.json(r);
+  } catch (e) { res.status(e && e.status ? e.status : 400).json({ error: String(e && e.message ? e.message : e) }); }
+});
+
 // ── Store settings (admin-only persistence for the Settings page) ──
 const SETTING_DEFAULTS = {
   // ── Centralized store identity / contact (single source of truth).
@@ -1279,6 +1529,9 @@ const SETTING_DEFAULTS = {
   'sms.api_key': '',
   'sms.token': '',
   'sms.sender': '',
+  // GitHub Releases updater (server-side config; token comes from env, never stored here)
+  'update.github.owner': '',
+  'update.github.repo': '',
 };
 function ensureSettingsTable() {
   db.exec(`CREATE TABLE IF NOT EXISTS settings (
@@ -2189,6 +2442,26 @@ api.post('/discounts/validate', (req, res) => {
 });
 
 // ── کارت به کارت: admin-managed bank cards ────────────────────────────
+// Visual templates supported by the checkout card renderer. Kept on the
+// server as the single source of truth so an invalid/unknown value can never
+// be persisted and silently fall back to a different look on the storefront.
+const BANK_CARD_TEMPLATES = ['classic', 'solid', 'glass', 'minimal', 'bold'];
+const BANK_CARD_DEFAULT_TEMPLATE = 'classic';
+
+function normalizeBankCardColor(v) {
+  const raw = String(v == null ? '' : v).trim();
+  if (!raw) return '';
+  if (/^#[0-9a-f]{3}$/i.test(raw)) {
+    return ('#' + raw[1] + raw[1] + raw[2] + raw[2] + raw[3] + raw[3]).toUpperCase();
+  }
+  if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toUpperCase();
+  return null;
+}
+function normalizeBankCardTemplate(v) {
+  const t = String(v == null ? '' : v).trim().toLowerCase();
+  return BANK_CARD_TEMPLATES.indexOf(t) === -1 ? BANK_CARD_DEFAULT_TEMPLATE : t;
+}
+
 function ensureBankCardsTable() {
   db.exec(`CREATE TABLE IF NOT EXISTS bank_cards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2198,11 +2471,22 @@ function ensureBankCardsTable() {
     account_number TEXT NOT NULL DEFAULT '',
     logo TEXT NOT NULL DEFAULT '',
     note TEXT NOT NULL DEFAULT '',
+    color TEXT NOT NULL DEFAULT '',
+    template TEXT NOT NULL DEFAULT 'classic',
     sort_order INTEGER NOT NULL DEFAULT 0,
     is_enabled INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
+  // Existing installations predate the color/template feature: add the
+  // columns in place so saved cards keep working and gain defaults.
+  const cols = db.prepare('PRAGMA table_info(bank_cards)').all().map((c) => c.name);
+  if (cols.indexOf('color') === -1) {
+    db.exec("ALTER TABLE bank_cards ADD COLUMN color TEXT NOT NULL DEFAULT ''");
+  }
+  if (cols.indexOf('template') === -1) {
+    db.exec("ALTER TABLE bank_cards ADD COLUMN template TEXT NOT NULL DEFAULT 'classic'");
+  }
   db.exec('CREATE INDEX IF NOT EXISTS idx_bank_cards_order ON bank_cards(sort_order, id)');
 }
 try { ensureBankCardsTable(); } catch (_) {}
@@ -2223,6 +2507,8 @@ function mapBankCard(r) {
     cardHolder: r.card_holder || '', card_holder: r.card_holder || '',
     accountNumber: r.account_number || '', account_number: r.account_number || '',
     logo: r.logo || '', note: r.note || '',
+    color: r.color || '', card_color: r.color || '',
+    template: normalizeBankCardTemplate(r.template), card_template: normalizeBankCardTemplate(r.template),
     sortOrder: Number(r.sort_order) || 0, sort_order: Number(r.sort_order) || 0,
     isEnabled: !!r.is_enabled, is_enabled: !!r.is_enabled,
     createdAt: r.created_at || null, updatedAt: r.updated_at || null,
@@ -2247,6 +2533,14 @@ function bankCardInput(b, isCreate) {
   if (b.account_number !== undefined) out.account_number = normalizeCardNumber(b.account_number);
   if (b.logo !== undefined) out.logo = String(b.logo || '').trim();
   if (b.note !== undefined) out.note = String(b.note || '').trim();
+  if (b.color !== undefined || b.cardColor !== undefined) {
+    const color = normalizeBankCardColor(b.color !== undefined ? b.color : b.cardColor);
+    if (color === null) return { error: 'رنگ کارت باید یک رنگ هگز معتبر باشد' };
+    out.color = color;
+  }
+  if (b.template !== undefined || b.cardTemplate !== undefined) {
+    out.template = normalizeBankCardTemplate(b.template !== undefined ? b.template : b.cardTemplate);
+  }
   if (b.sortOrder !== undefined) out.sort_order = Math.max(0, Math.round(Number(b.sortOrder) || 0));
   if (b.sort_order !== undefined) out.sort_order = Math.max(0, Math.round(Number(b.sort_order) || 0));
   if (b.isEnabled !== undefined) out.is_enabled = b.isEnabled ? 1 : 0;
@@ -2256,6 +2550,8 @@ function bankCardInput(b, isCreate) {
     if (!out.card_number) return { error: 'cardNumber is required' };
     if (out.is_enabled == null) out.is_enabled = 1;
     if (out.sort_order == null) out.sort_order = 0;
+    if (out.color == null) out.color = '';
+    if (out.template == null) out.template = BANK_CARD_DEFAULT_TEMPLATE;
   }
   if (out.card_number != null && out.card_number !== '' && out.card_number.length !== 16) {
     return { error: 'شماره کارت باید ۱۶ رقم باشد' };
@@ -2275,12 +2571,13 @@ api.post('/admin/bank-cards', requireAdmin, (req, res) => {
   const { values, error } = bankCardInput(req.body || {}, true);
   if (error) return res.status(400).json({ error });
   const info = db.prepare(`INSERT INTO bank_cards
-    (bank_name, card_number, card_holder, account_number, logo, note, sort_order, is_enabled, updated_at)
-    VALUES (@bank_name, @card_number, @card_holder, @account_number, @logo, @note, @sort_order, @is_enabled, datetime('now'))`)
+    (bank_name, card_number, card_holder, account_number, logo, note, color, template, sort_order, is_enabled, updated_at)
+    VALUES (@bank_name, @card_number, @card_holder, @account_number, @logo, @note, @color, @template, @sort_order, @is_enabled, datetime('now'))`)
     .run({
       bank_name: values.bank_name, card_number: values.card_number,
       card_holder: values.card_holder ?? '', account_number: values.account_number ?? '',
       logo: values.logo ?? '', note: values.note ?? '',
+      color: values.color ?? '', template: values.template ?? BANK_CARD_DEFAULT_TEMPLATE,
       sort_order: values.sort_order ?? 0, is_enabled: values.is_enabled ?? 1,
     });
   res.status(201).json(mapBankCard(db.prepare('SELECT * FROM bank_cards WHERE id = ?').get(info.lastInsertRowid)));
@@ -2300,12 +2597,15 @@ api.put('/admin/bank-cards/:id', requireAdmin, (req, res) => {
     account_number: values.account_number ?? cur.account_number,
     logo: values.logo ?? cur.logo,
     note: values.note ?? cur.note,
+    color: values.color ?? cur.color,
+    template: values.template ?? normalizeBankCardTemplate(cur.template),
     sort_order: values.sort_order ?? cur.sort_order,
     is_enabled: values.is_enabled ?? cur.is_enabled,
   };
   if (!String(merged.bank_name).trim()) return res.status(400).json({ error: 'bankName is required' });
   db.prepare(`UPDATE bank_cards SET bank_name=@bank_name, card_number=@card_number,
     card_holder=@card_holder, account_number=@account_number, logo=@logo, note=@note,
+    color=@color, template=@template,
     sort_order=@sort_order, is_enabled=@is_enabled, updated_at=datetime('now') WHERE id=@id`)
     .run({ ...merged, id: req.params.id });
   res.json(mapBankCard(db.prepare('SELECT * FROM bank_cards WHERE id = ?').get(req.params.id)));
@@ -4483,6 +4783,69 @@ api.post('/support/chat/:id/attachment', uploadChat.single('file'), (req,res)=>{
 });
 try{ app.use('/uploads', require('express').static(require('path').join(__dirname,'..','uploads'))); }catch(_){}
 
+// Bank-transfer receipt upload (checkout payment page).
+// Public, rate-limited, guest-checkout compatible. Strictly image-only,
+// 5 MB max, JPG/PNG/WebP/GIF. Files land in /uploads/receipts and are
+// served by the static /uploads middleware above.
+const receiptUploadDir = path.join(__dirname, '..', 'uploads', 'receipts');
+try { require('fs').mkdirSync(receiptUploadDir, { recursive: true }); } catch (_) {}
+const RECEIPT_ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const RECEIPT_ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+function receiptFileFilter(req, file, cb) {
+  const mime = String(file.mimetype || '').toLowerCase();
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  if (RECEIPT_ALLOWED_MIME.has(mime) && RECEIPT_ALLOWED_EXT.has(ext)) return cb(null, true);
+  cb(new Error('نوع فایل نامعتبر است. فقط JPG، PNG، WebP و GIF مجاز هستند.'));
+}
+const receiptStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, receiptUploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const safeExt = RECEIPT_ALLOWED_EXT.has(ext) ? ext : '';
+    cb(null, 'receipt-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8) + safeExt);
+  },
+});
+const receiptUpload = multer({
+  storage: receiptStorage,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: receiptFileFilter,
+});
+function validateReceiptMagic(filePath, mime) {
+  try {
+    const fd = require('fs').openSync(filePath, 'r');
+    const buf = Buffer.alloc(12);
+    require('fs').readSync(fd, buf, 0, 12, 0);
+    require('fs').closeSync(fd);
+    if (mime === 'image/jpeg') return buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;
+    if (mime === 'image/png') return buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
+    if (mime === 'image/gif') return buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46;
+    if (mime === 'image/webp') return buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 && buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50;
+    return false;
+  } catch (_) { return false; }
+}
+const receiptLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many requests, try later' } });
+api.post('/orders/card-receipt', receiptLimiter, (req, res) => {
+  receiptUpload.fields([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }])(req, res, (err) => {
+    try {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'حجم فایل بیش از ۵ مگابایت است.' });
+        if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ error: 'فقط یک فایل تصویر مجاز است.' });
+        return res.status(400).json({ error: err.message || 'آپلود رسید ناموفق بود. لطفاً دوباره تلاش کنید.' });
+      }
+      const file = (req.files && ((req.files.image && req.files.image[0]) || (req.files.file && req.files.file[0]))) || req.file;
+      if (!file) return res.status(400).json({ error: 'فایل رسید الزامی است.' });
+      if (!validateReceiptMagic(file.path, file.mimetype)) {
+        try { require('fs').unlinkSync(file.path); } catch (_) {}
+        return res.status(400).json({ error: 'فایل تصویر معتبر نیست. فقط JPG، PNG، WebP و GIF مجاز هستند.' });
+      }
+      const url = '/uploads/receipts/' + file.filename;
+      return res.status(201).json({ url: url, name: file.originalname, size: file.size });
+    } catch (e) {
+      return res.status(500).json({ error: 'آپلود رسید ناموفق بود. لطفاً دوباره تلاش کنید.' });
+    }
+  });
+});
+
 // ── Articles (SQLite-backed; public read, admin write) ──
 function ensureArticlesTable(){
   db.exec(`CREATE TABLE IF NOT EXISTS articles (
@@ -5548,6 +5911,27 @@ function blockSensitivePaths(req, res, next) {
   if (p === '/package.json' || p === '/package-lock.json') return res.status(404).type('text/plain').send('Not found');
   next();
 }
+// ── Server-side gate for protected admin pages ───────────────
+// admin/index.html (reached via /admin and /admin/) and admin/builder.html are
+// only served to requests carrying a valid admin session cookie (or Bearer
+// token). The access decision is made here, on the server, on every request —
+// never by client-side scripts — so an unauthenticated or revoked session
+// never receives the admin UI and no panel flash can happen. Regular admin
+// assets (CSS/JS) stay public: they contain neither data nor privilege.
+const PROTECTED_ADMIN_PAGES = new Set(['/admin', '/admin/', '/admin/index.html', '/admin/builder.html']);
+app.use(function requireAdminForAdminPages(req, res, next) {
+  let p = String(req.path || '').split('?')[0];
+  try { p = decodeURIComponent(p); } catch (_) {}
+  if (!PROTECTED_ADMIN_PAGES.has(p)) return next();
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  const auth = getAdminAuth(req);
+  if (auth) return next();
+  // Not authenticated: no admin HTML at all. Send the browser to the existing
+  // storefront login page with a return hint.
+  return res.redirect(302, '/login.html?redirect=' + encodeURIComponent(p));
+});
 app.use(blockSensitivePaths);
 app.use(express.static(ROOT, { index: 'index.html' }));
 

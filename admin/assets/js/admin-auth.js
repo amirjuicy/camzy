@@ -35,7 +35,12 @@
       body: body === undefined ? undefined : JSON.stringify(body),
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
-        if (!res.ok) throw new Error((data && data.error) || ('Request failed: ' + res.status));
+        if (!res.ok) {
+          var err = new Error((data && data.error) || ('Request failed: ' + res.status));
+          /* 429/5xx are transient server states, not auth verdicts. */
+          if (res.status === 429 || res.status >= 500) err.transient = true;
+          throw err;
+        }
         return data;
       });
     });
@@ -84,14 +89,63 @@
   function validateSession() {
     if (!apiAvailable()) return Promise.resolve(getCurrentAdmin());
     var session = getAdminSession();
-    if (!session || !session.token) return Promise.resolve(null);
-    return apiRequest('GET', '/admin/me').then(function (data) {
+    var token = session && session.token;
+    /* Some server states are not auth verdicts: 429 (rate limiting) or 5xx.
+       Treating them as "logged out" would eject a valid admin during a burst,
+       so they are retried once after a short pause. 401/403 remain decisive. */
+    function meResult(res) {
+      if (res && res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          return (data && data.admin) ? data.admin : null;
+        });
+      }
+      if (res && (res.status === 429 || res.status >= 500)) {
+        var e = new Error('Request failed: ' + res.status);
+        e.transient = true;
+        throw e;
+      }
+      return Promise.resolve(null);
+    }
+    function retryTransient() {
+      return new Promise(function (r) { setTimeout(r, 1200); });
+    }
+    if (!token) {
+      /* Cookie-only live session (for example localStorage was cleared): the
+         server can still authenticate this request via the HttpOnly cookie,
+         so ask the server instead of assuming logged-out. */
+      return fetch(API_BASE + '/api/admin/me', { credentials: 'same-origin' })
+        .then(meResult, function () { return null; })
+        .catch(function (err) {
+          if (err && err.transient) {
+            /* Transient burst: retry once, then fail closed on any outcome. */
+            return retryTransient().then(function () {
+              return fetch(API_BASE + '/api/admin/me', { credentials: 'same-origin' })
+                .then(meResult)
+                .catch(function () { return null; });
+            });
+          }
+          return null;
+        });
+    }
+    return apiRequest('GET', '/admin/me', undefined, token).then(function (data) {
       if (data && data.admin) {
         setAdminSession(data.admin, session.token, session.remember);
         return data.admin;
       }
       return null;
     }).catch(function (err) {
+      if (err && err.transient) {
+        /* 429/5xx burst: retry once instead of deciding from a stale cache. */
+        return retryTransient().then(function () {
+          return apiRequest('GET', '/admin/me', undefined, token).then(function (data) {
+            if (data && data.admin) {
+              setAdminSession(data.admin, session.token, session.remember);
+              return data.admin;
+            }
+            return null;
+          }, function () { return getCurrentAdmin(); });
+        });
+      }
       if (err && /401|Not authenticated/i.test(err.message || '')) {
         setAdminSession(null);
         notifyAdminAuthChange();
@@ -135,7 +189,10 @@
       notifyAdminAuthChange();
       return { success: true };
     };
-    if (apiAvailable() && getAdminSession() && getAdminSession().token) {
+    /* Always notify the server: a live HttpOnly cookie session has no
+       localStorage token, yet the cookie itself authenticates the logout
+       request and lets the server revoke the session + clear the cookie. */
+    if (apiAvailable()) {
       return apiRequest('POST', '/admin/logout').catch(function () {}).then(done);
     }
     try { done(); } catch (e) {}
@@ -146,21 +203,65 @@
     try { window.dispatchEvent(new CustomEvent('as_admin_auth_change')); } catch (e) {}
   }
 
-  /* ── Require admin auth (redirect to login if not authenticated) ── */
+  /* ── Boot gate (neutral loading screen) ──────────────────────
+     The server only serves this page to a valid admin session, but the page's
+     own scripts still confirm the session against the DB before revealing the
+     panel, so the admin UI can never appear before authorization is verified. */
+  function bootGate() {
+    var el = document.getElementById('admin-boot');
+    if (!el) return;
+    el.classList.add('is-done');
+    setTimeout(function () {
+      if (el.parentNode && el.classList.contains('is-done')) el.parentNode.removeChild(el);
+    }, 300);
+  }
+
+  /* ── Require admin auth (server-confirmed) ─────────────────── */
   function requireAdminAuth() {
-    if (!isAdminLoggedIn()) {
+    var proceedToLogin = function () {
       var loginUrl = '/login.html';
       var current = window.location.pathname + window.location.search + window.location.hash;
-      if (current && current !== '/' && !current.includes('login.html')) {
+      if (current && current !== '/' && current.indexOf('login.html') === -1) {
         loginUrl += '?redirect=' + encodeURIComponent(current);
       }
-      window.location.href = loginUrl;
-      return false;
-    }
-    /* Async re-validation against the database; redirect if revoked. */
-    validateSession().then(function (admin) {
-      if (!admin) requireAdminAuth();
+      window.location.replace(loginUrl);
+      /* the neutral boot loader stays on screen until the redirect lands */
+    };
+    var decided = false;
+    var cached = getCurrentAdmin();
+    /* Decision is the server's, using the DB-backed session (cookie or Bearer
+       token). The localStorage flag is only a cache and is never treated as
+       proof of authentication. */
+    var glued = validateSession().then(function (admin) {
+      if (decided) {
+        /* The watchdog already resolved the boot; re-checking can still
+           eject a session the server has revoked in the meantime. */
+        if (!admin) { try { setAdminSession(null); } catch (e) {} proceedToLogin(); }
+        return;
+      }
+      decided = true;
+      if (admin) {
+        notifyAdminAuthChange();
+        bootGate();
+      } else {
+        proceedToLogin();
+      }
+    }, function () {
+      /* The re-validation itself failed unexpectedly: fail closed. */
+      if (!decided) { decided = true; proceedToLogin(); }
     });
+    /* Watchdog: the server only ever serves this page to a session it has
+       just re-validated with the cookie, so if the boot check is merely slow
+       (rate limit burst, slow network) the loader must not hang forever.
+       With a cached profile it is safe to reveal after a grace period; the
+       background re-check above continues and still revoke/redirects on an
+       invalidated session. Without any cached profile the neutral loader
+       stays until the server answers. */
+    setTimeout(function () {
+      if (decided) return;
+      decided = true;
+      if (cached) { notifyAdminAuthChange(); bootGate(); }
+    }, cached ? 6000 : 12000);
     return true;
   }
 

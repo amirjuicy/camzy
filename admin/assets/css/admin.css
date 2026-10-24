@@ -466,6 +466,43 @@ body.admin-body {
   padding: 20px;
 }
 
+/* ── Payment-method sub-navigation ───────────────────────────── */
+.adm-pm-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color-light);
+  background: var(--bg-surface-alt, #fafafa);
+}
+
+.adm-pm-subnav__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 6px);
+  background: var(--color-white, #fff);
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-decoration: none;
+  transition: background var(--transition-fast, 150ms ease-out),
+              border-color var(--transition-fast, 150ms ease-out),
+              color var(--transition-fast, 150ms ease-out);
+}
+
+.adm-pm-subnav__link:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.adm-pm-subnav__link.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white, #fff);
+  font-weight: 600;
+}
+
 /* ── Greeting ───────────────────────────────────────────────── */
 .adm-greeting {
   position: relative;
@@ -2269,3 +2306,23 @@ img, video, canvas, svg, iframe { max-width: 100%; }
   .cb-foot__actions .btn { flex: none; }
   .cb-foot__status { flex: 1 1 auto; min-width: 0; }
 }
+
+/* -- Bank cards: template / color controls + live preview -------------- */
+.adm-bc-color-row{display:flex;align-items:center;gap:10px}
+.adm-bc-color-row #adm-bc-color{width:56px;height:38px;padding:3px;border:1px solid var(--border-color);
+  border-radius:10px;background:var(--bg-surface);cursor:pointer;flex:0 0 auto}
+.adm-bc-swatches{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.adm-bc-swatch{width:26px;height:26px;padding:0;border-radius:50%;border:2px solid #fff;
+  box-shadow:0 0 0 1px var(--border-color);cursor:pointer;
+  transition:transform .15s ease,box-shadow .15s ease}
+.adm-bc-swatch:hover{transform:scale(1.08)}
+.adm-bc-swatch.is-active{box-shadow:0 0 0 2px var(--text-primary)}
+.adm-bc-preview{display:flex;justify-content:center;padding:12px;border:1px dashed var(--border-color);
+  border-radius:var(--radius-2xl);background:var(--bg-surface-alt)}
+.adm-bc-preview__card{width:100%;max-width:380px;min-height:0;aspect-ratio:1.586;
+  justify-content:space-between;gap:10px}
+.adm-bc-tpl{display:inline-flex;align-items:center;gap:7px;font-size:12px}
+.adm-bc-dot{width:14px;height:14px;border-radius:50%;display:inline-block;flex:0 0 auto;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.adm-bc-dot--default{background:linear-gradient(135deg,#1F2937,#374151)}
+@media (max-width:600px){.adm-bc-preview__card{max-width:100%}}

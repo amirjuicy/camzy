@@ -34,7 +34,8 @@
     'payment-cod': 'پرداخت در محل',
     'payment-card': 'کارت به کارت',
     sms: 'پنل پیامک',
-    seo: 'تنظیمات SEO'
+    seo: 'تنظیمات SEO',
+    'backup-update': 'پشتیبان‌گیری و آپدیت'
   };
 
   function $(sel, ctx) { return (ctx || document).querySelector(sel); }
@@ -107,7 +108,25 @@
     return Object.prototype.hasOwnProperty.call(VIEW_TITLES, name);
   }
 
+  /* Payment-method pages are children of the «روش‌های خرید» hub view: they
+     have no own sidebar link, so the parent item stays highlighted. */
+  var VIEW_PARENT = {
+    'payment-online': 'purchase-methods',
+    'payment-cod': 'purchase-methods',
+    'payment-card': 'purchase-methods'
+  };
+  /* Same views are part of the "settings" permission scope. */
+  var SETTINGS_SUBVIEWS = ['purchase-methods', 'payment-online', 'payment-cod', 'payment-card'];
+  /* The view currently on screen (not derivable from the active nav link,
+     because child views have no link of their own). */
+  var activeViewName = null;
+
+  function normalizeBackupView(name) {
+    if (name === 'backup' || name === 'backups' || name === 'backup-update-page') return 'backup-update';
+    return name;
+  }
   function showView(name) {
+    name = normalizeBackupView(name);
     if (!isValidView(name)) name = 'dashboard';
     if (!canAccessView(name)) {
       showToast('دسترسی به این بخش ندارید', 'danger');
@@ -116,19 +135,57 @@
         window.history.replaceState(null, '', '#/' + name);
       }
     }
-    var activeLink = $('.admin-nav__link.is-active');
-    var activeView = activeLink ? activeLink.getAttribute('data-view') : null;
-    if (activeView === name) return;
+    closeSidebar();
+    if (activeViewName === name) return;
+    activeViewName = name;
+    var navKey = VIEW_PARENT[name] || name;
     navLinks.forEach(function (link) {
-      link.classList.toggle('is-active', link.getAttribute('data-view') === name);
+      link.classList.toggle('is-active', link.getAttribute('data-view') === navKey);
     });
     Object.keys(views).forEach(function (key) {
       if (views[key]) views[key].classList.toggle('is-active', key === name);
     });
     if (topbarTitle) topbarTitle.textContent = VIEW_TITLES[name];
-    closeSidebar();
+    /* Sub-navigation of the payment-method pages (links are cloned from the hub). */
+    $$('[data-pm-subnav] .adm-pm-subnav__link').forEach(function (link) {
+      var target = (link.getAttribute('href') || '').replace(/^#\/?/, '');
+      link.classList.toggle('is-active', target === name);
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  // Lazy-load hook for the backup/update page (mirrors the logs pattern).
+  var _showViewBase = showView;
+  showView = function (name) {
+    _showViewBase(name);
+    if (name === 'backup-update') {
+      setTimeout(function () {
+        if (window.CamzyAdminBackup && typeof window.CamzyAdminBackup.load === 'function') {
+          window.CamzyAdminBackup.load();
+        }
+      }, 0);
+    }
+  };
+
+  /* Route through the public API so per-view lazy-load hooks (bank cards,
+     reports, …) keep firing for hash-driven navigation too. */
+  function navigate(name) {
+    var api = window.CamzyAdmin && window.CamzyAdmin.showView;
+    if (api && api !== showView) { api(name); return; }
+    showView(name);
+  }
+
+  /* ── Hash routing ─────────────────────────────────────────────
+     In-page links (e.g. the payment-method hub) are plain anchors
+     that only change location.hash. Without this listener the view
+     never switched and the page had to be refreshed to see it. */
+  window.addEventListener('hashchange', function () {
+    var name = (window.location.hash || '').replace(/^#\/?/, '');
+    name = normalizeBackupView(name);
+    if (!isValidView(name)) return;
+    if (name === activeViewName) return;
+    navigate(name);
+  });
 
   navLinks.forEach(function (link) {
     link.addEventListener('click', function (e) {
@@ -137,7 +194,7 @@
       if (window.history && window.history.replaceState) {
         window.history.replaceState(null, '', '#/' + name);
       }
-      showView(name);
+      navigate(name);
       if (name === 'orders') {
         var firstChip = $('.adm-chip.is-active[data-status]');
         applyOrderFilter(firstChip ? firstChip.getAttribute('data-status') : 'all');
@@ -163,6 +220,7 @@
   /* ── Initial view from hash ───────────────────────────────── */
   function initialView() {
     var hash = (window.location.hash || '').replace(/^#\/?/, '');
+    hash = normalizeBackupView(hash);
     var name = isValidView(hash) ? hash : 'dashboard';
     return canAccessView(name) ? name : 'dashboard';
   }
@@ -178,6 +236,8 @@
     if (myPerms.sections.indexOf(name) !== -1) return true;
     // chatbot-messages reuses the settings API, so settings access suffices.
     if (name === 'chatbot-messages' && myPerms.sections.indexOf('settings') !== -1) return true;
+    // Payment-method pages live under the settings scope.
+    if (SETTINGS_SUBVIEWS.indexOf(name) !== -1 && myPerms.sections.indexOf('settings') !== -1) return true;
     return false;
   }
   function applyPermGating() {
@@ -195,8 +255,10 @@
       var s = JSON.parse(localStorage.getItem('as_admin_session') || 'null');
       t = (s && s.token) || '';
     } catch (e) {}
-    if (!t) return;
-    fetch('/api/admin/me', { headers: { Authorization: 'Bearer ' + t } })
+    /* Token may be absent for a live cookie-only session (localStorage
+       cleared): same-origin fetch sends the HttpOnly cookie and the server
+       still authenticates the request, so the call is made either way. */
+    fetch('/api/admin/me', t ? { headers: { Authorization: 'Bearer ' + t } } : { credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (d && d.admin && d.admin.permissions) {

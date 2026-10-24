@@ -98,8 +98,46 @@ function cleanFile(urlPath) {
   return null;
 }
 
+// ── Sensitive-path blocking (serve.js has no auth; mirror server/app.js) ──
+// This static preview server must never expose admin HTML, server source,
+// databases, logs, secrets, git metadata, manifests, or other non-public
+// artifacts. Only path-traversal-safe, public storefront assets are served.
+function normalizeBlockedPath(p) {
+  let s = '';
+  try { s = decodeURIComponent(String(p || '').split('?')[0]); } catch (_) { s = String(p || '').split('?')[0]; }
+  s = String(s).replace(/\/{2,}/g, '/');
+  return String(s).replace(/%2e/gi, '.').replace(/%2f/gi, '/').replace(/%5c/gi, '/');
+}
+function isBlockedPath(p) {
+  const candidates = [normalizeBlockedPath(p), String(p || '').split('?')[0]];
+  // Admin HTML entry points: this server has no authentication system.
+  if (candidates.some((x) => /^\/admin\/?$/i.test(x))) return true;
+  if (candidates.some((x) => /^\/admin\/index\.html$/i.test(x))) return true;
+  if (candidates.some((x) => /^\/admin\/builder\.html$/i.test(x))) return true;
+  if (candidates.some((x) => /^\/admin\/admin(\/|$)/i.test(x))) return true;
+  if (candidates.some((x) => /^\/admin\/[^/]*\.html$/i.test(x))) return true;
+  // Sensitive top-level directories.
+  if (candidates.some((x) => /^\/data(\/|$)/i.test(x))) return true;
+  if (candidates.some((x) => /^\/server(\/|$)/i.test(x))) return true;
+  if (candidates.some((x) => /(^|\/)abzar-shokri(\/|$)/i.test(x))) return true;
+  if (candidates.some((x) => /^\/\.git(\/|$)/i.test(x))) return true;
+  // Sensitive file extensions.
+  if (candidates.some((x) => /\.(env|log|sql|sqlite|sqlite-wal|sqlite-shm|db|db-wal|db-shm|bak|ps1|bat|md|txt|mjs)$/i.test(x))) return true;
+  // Credential / session JSON artifacts.
+  if (candidates.some((x) => /(^|\/)[^/]*(_cred|_session|_live)[^/]*\.json$/i.test(x))) return true;
+  if (candidates.some((x) => /^\/(_live_session|_repro_cred)\.json$/i.test(x))) return true;
+  // Dependency manifests.
+  if (candidates.some((x) => x === '/package.json' || x === '/package-lock.json')) return true;
+  return false;
+}
+
 http.createServer((req, res) => {
-  let rawUrl = decodeURIComponent(req.url.split('?')[0]);
+  let rawUrl = decodeURIComponent(req.url.split('?')[0]).replace(/\/{2,}/g, '/');
+  if (isBlockedPath(rawUrl) || isBlockedPath(req.url)) {
+    res.writeHead(404);
+    res.end('Not found');
+    return;
+  }
   const query = cleanQuery(req);
   const redir = cleanRedirect(rawUrl, query);
   if (redir) {
