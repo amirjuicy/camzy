@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs');
 const { getDb } = require('./db');
 const { migrate } = require('./migrate');
 const backupManager = require('./backup-manager');
+const backupScheduler = require('./backup-scheduler');
 
 migrate();
 const db = getDb();
@@ -126,11 +127,11 @@ function normalizePaymentMethod(v) {
   return 'cod';
 }
 
-function mapOrder(r, items) {
+function mapOrder(r, items, opts) {
   if (!r) return r;
   const pm = VALID_PAYMENT_METHODS.has(r.payment_method) ? r.payment_method : normalizePaymentMethod(r.payment_method);
   const ps = VALID_PAYMENT_STATUSES.has(r.payment_status) ? r.payment_status : 'unpaid';
-  return {
+  const out = {
     id: r.id, userId: r.user_id, date: r.date, status: r.status, statusText: r.status_text,
     total: r.total, itemsCount: r.items_count, shipping: r.shipping, discount: r.discount,
     discountCode: r.discount_code || '', discount_code: r.discount_code || '',
@@ -150,6 +151,26 @@ function mapOrder(r, items) {
       };
     }),
   };
+  // Receipt URL + selected bank card are ADMIN-ONLY: customer-facing payloads
+  // (order creation, my-orders, public order detail) never carry them, so a
+  // receipt link cannot be discovered without authorization.
+  if (opts && opts.admin) {
+    out.receiptUrl = r.receipt_url || null;
+    out.selectedCardId = r.selected_card_id != null && r.selected_card_id !== '' ? Number(r.selected_card_id) : null;
+  }
+  return out;
+}
+
+// The bank card the customer picked at checkout, read from the
+// «روش‌های خرید» settings by the id stored on the order. Never falls back to
+// the currently configured/default card: a missing card stays missing.
+function orderSelectedCard(row) {
+  const id = row && row.selected_card_id != null && row.selected_card_id !== '' ? Number(row.selected_card_id) : null;
+  if (!Number.isInteger(id) || id <= 0) return null;
+  try { ensureBankCardsTable(); } catch (_) {}
+  let r = null;
+  try { r = db.prepare('SELECT * FROM bank_cards WHERE id = ?').get(id); } catch (_) { return null; }
+  return r ? mapBankCard(r) : null;
 }
 
 const api = express.Router();
@@ -1146,6 +1167,8 @@ api.get('/admin/validate', (req, res) => {
 const ADMIN_SELF_PATHS = new Set(['/admin/me', '/admin/validate', '/admin/logout', '/admin/password']);
 const ADMIN_SECTION_PREFIXES = [
   ['/admin/logs', 'logs'],
+
+  // Backup & GitHub Releases update workflow (Admin → «پشتیبان‌گیری و آپدیت»)
   ['/admin/backup', 'backup-update'],
   ['/admin/backups', 'backup-update'],
   ['/admin/backup-update', 'backup-update'],
@@ -1262,39 +1285,242 @@ api.get('/admin/logs/files', requireAdmin, (req,res)=>{
   res.json({ files: listLogFiles(type) });
 });
 
-// ── Backup & update management (admin-only) ──
+
+// ── Backup & GitHub Releases update workflow (admin-only) ────────────
+// Section: backup-update (Admin → «پشتیبان‌گیری و آپدیت»). Everything runs
+// server-side: the GitHub token never reaches the browser, packages are
+// staged in data/updates/, and an install demands the exact version +
+// filename the admin confirmed.
 const updateUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (/\.zip$/i.test(String(file && file.originalname || ''))) cb(null, true);
+    if (/\.zip$/i.test(String((file && file.originalname) || ''))) cb(null, true);
     else cb(new Error('Only .zip files are allowed'));
   }
 });
+
+function sendUpdateError(res, e, fallbackStatus) {
+  const status = (e && e.status) || fallbackStatus || 500;
+  const body = { error: String((e && e.message) || e) };
+  if (e && e.code) body.code = e.code;
+  if (e && e.retryAt) body.retryAt = e.retryAt;
+  return res.status(status).json(body);
+}
+
+// Shared payload for every backup-status view (explicit route, the alias
+// bases and the combined alias) so schedule/health data stays consistent.
+async function backupStatusPayload() {
+  const op = backupManager.currentOperation();
+  return {
+    ok: true,
+    version: backupManager.getAppVersion(),
+    latestBackup: backupManager.getLatestBackup(),
+    backups: backupManager.listBackups(),
+    update: await backupManager.checkUpdate(),
+    schedule: backupScheduler.describeSchedule(),
+    operation: op ? { kind: op.kind, startedAt: op.startedAt } : null
+  };
+}
+
 function sendBackupDownload(req, res) {
   try {
-    const file = req.params && req.params.file ? req.params.file : req.query.file;
+    const file = (req.params && req.params.file) ? req.params.file : req.query.file;
     const full = backupManager.resolveBackupFile(file);
     res.setHeader('Content-Disposition', 'attachment; filename="' + path.basename(full) + '"');
     res.setHeader('Content-Type', 'application/zip');
     return res.sendFile(full);
   } catch (e) {
-    return res.status(400).json({ error: String(e && e.message ? e.message : e) });
+    return res.status(400).json({ error: String((e && e.message) || e) });
   }
 }
+
+// Backups
+api.get('/admin/backup/status', requireAdmin, async (req, res) => {
+  try { res.json(await backupStatusPayload()); } catch (e) { sendUpdateError(res, e); }
+});
+api.get('/admin/backup/list', requireAdmin, (req, res) => {
+  try { res.json({ ok: true, backups: backupManager.listBackups() }); }
+  catch (e) { sendUpdateError(res, e); }
+});
+api.post('/admin/backup/create', requireAdmin, async (req, res) => {
+  try {
+    // no keep override: manual backups honour the configured retention setting
+    const meta = await backupManager.createBackup({});
+    res.json({ ok: true, backup: meta, latestBackup: backupManager.getLatestBackup() });
+  } catch (e) { sendUpdateError(res, e); }
+});
+api.get('/admin/backup/download', requireAdmin, sendBackupDownload);
+api.get('/admin/backup/download/:file', requireAdmin, sendBackupDownload);
+
+// Daily-backup schedule + retention settings (admin, section- and
+// read-only-enforced by requireAdmin like every other backup endpoint).
+api.put('/admin/backup/settings', requireAdmin, async (req, res) => {
+  try {
+    const settings = backupManager.saveBackupScheduleSettings(req.body || {});
+    let timer = null;
+    try { timer = backupScheduler.restartScheduleTimer(); } catch (_) {}
+    res.json({ ok: true, settings: settings, schedule: backupScheduler.describeSchedule(), timer: timer });
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+
+// ── Upload & restore a backup archive (admin-only) ───────────────────────
+// Deliberately separate from the GitHub update-package workflow below: this
+// only accepts archives produced by the backup system. The upload is validated
+// server-side (ZIP structure, backup metadata, database integrity, allowed
+// paths) before it is staged, and restoring needs an explicit confirmation
+// plus a verified safety backup of the current data. Both endpoints sit behind
+// requireAdmin (section + non-readonly) like every other backup route.
+const restoreUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: backupManager.RESTORE_MAX_UPLOAD_BYTES },
+  fileFilter: (req, file, cb) => {
+    if (/\.zip$/i.test(String((file && file.originalname) || ''))) cb(null, true);
+    else cb(new Error('Only .zip backup archives are allowed'));
+  }
+});
+
+api.post('/admin/backup/restore/upload', requireAdmin, (req, res, next) => {
+  restoreUpload.single('file')(req, res, (err) => {
+    if (err) {
+      const tooLarge = !!(err && err.code === 'LIMIT_FILE_SIZE');
+      return res.status(tooLarge ? 413 : 400).json({
+        error: String((err && err.message) || err),
+        code: tooLarge ? 'upload_too_large' : 'upload_failed'
+      });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file || !req.file.buffer) return res.status(400).json({ error: 'No file uploaded', code: 'no_file' });
+    const result = await backupManager.stageUploadedBackup(req.file.buffer, req.file.originalname);
+    res.json(result);
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+api.post('/admin/backup/restore/apply', requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    res.json(await backupManager.restoreBackupArchive({
+      confirm: body.confirm,
+      file: body.file || body.filename
+    }));
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+
+// Staged update packages (list/upload/delete/validate)
+api.get('/admin/updates', requireAdmin, async (req, res) => {
+  try { res.json({ ok: true, packages: await backupManager.listUpdatePackages() }); }
+  catch (e) { sendUpdateError(res, e); }
+});
+api.post('/admin/updates/upload', requireAdmin, (req, res, next) => {
+  updateUpload.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: String((err && err.message) || err), code: 'upload_failed' });
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file || !req.file.buffer) return res.status(400).json({ error: 'No file uploaded', code: 'no_file' });
+    const result = await backupManager.saveUploadedUpdate(req.file.buffer, req.file.originalname);
+    res.json(Object.assign({ ok: true }, result, { packages: await backupManager.listUpdatePackages() }));
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+api.delete('/admin/updates/:file', requireAdmin, async (req, res) => {
+  try {
+    backupManager.deleteUpdatePackage(req.params.file);
+    res.json({ ok: true, packages: await backupManager.listUpdatePackages() });
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+// ZIP structure + protected-path validation, run before any install offer.
+api.post('/admin/updates/validate', requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    const file = backupManager.resolveUpdateFile(body.file || body.filename);
+    const validation = await backupManager.validateUpdatePackageBuffer(require('fs').readFileSync(file));
+    const info = await backupManager.readPackageInfo(file);
+    res.json({ ok: true, file: path.basename(file), validation: validation, version: info.version, versionSource: info.source });
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+
+// GitHub Releases: repository configuration (owner/name only — the token is
+// read from the server environment and is never returned to the client).
+api.get('/admin/updates/github/config', requireAdmin, (req, res) => {
+  try {
+    const cfg = backupManager.getGitHubConfig();
+    res.json({
+      ok: true,
+      owner: cfg.owner,
+      repo: cfg.repo,
+      repository: (cfg.owner && cfg.repo) ? (cfg.owner + '/' + cfg.repo) : '',
+      tokenConfigured: !!cfg.token,
+      apiBaseUrl: cfg.apiBaseUrl
+    });
+  } catch (e) { sendUpdateError(res, e); }
+});
+api.put('/admin/updates/github/config', requireAdmin, (req, res) => {
+  try {
+    const b = req.body || {};
+    const owner = String(b.owner == null ? '' : b.owner).trim();
+    const repo = String(b.repo == null ? '' : b.repo).trim();
+    if (owner && !/^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(owner)) {
+      return res.status(400).json({ error: 'Owner نامعتبر است (فقط حروف انگلیسی، اعداد و خط تیره)', code: 'invalid_repo' });
+    }
+    if (repo && !/^[A-Za-z0-9._-]{1,100}$/.test(repo)) {
+      return res.status(400).json({ error: 'نام Repository نامعتبر است', code: 'invalid_repo' });
+    }
+    const upd = db.prepare("INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=datetime('now')");
+    upd.run('update.github.owner', owner);
+    upd.run('update.github.repo', repo);
+    const cfg = backupManager.getGitHubConfig();
+    res.json({
+      ok: true,
+      owner: cfg.owner,
+      repo: cfg.repo,
+      repository: (cfg.owner && cfg.repo) ? (cfg.owner + '/' + cfg.repo) : '',
+      tokenConfigured: !!cfg.token
+    });
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+
+// GitHub Releases: latest published release + downloadable update ZIP
+api.post('/admin/updates/github/check', requireAdmin, async (req, res) => {
+  try { res.json(await backupManager.checkGitHubUpdate(req.body || {})); }
+  catch (e) { sendUpdateError(res, e, 502); }
+});
+api.get('/admin/updates/github/check', requireAdmin, async (req, res) => {
+  try { res.json(await backupManager.checkGitHubUpdate()); }
+  catch (e) { sendUpdateError(res, e, 502); }
+});
+// Download the release ZIP into data/updates/ and verify its SHA-256 digest.
+api.post('/admin/updates/github/download', requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    res.json(await backupManager.downloadGitHubReleaseAsset({ asset: body.asset || body.assetName }));
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+
+// Local package check + install (requires confirm + exact version + filename)
+api.post('/admin/backup/update/check', requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    res.json(await backupManager.checkUpdate(body.package || body.file || body.filename));
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
+api.post('/admin/backup/update/apply', requireAdmin, async (req, res) => {
+  try {
+    const body = req.body || {};
+    res.json(await backupManager.applyUpdate({
+      confirm: body.confirm,
+      version: body.version,
+      filename: body.filename || body.package || body.file
+    }));
+  } catch (e) { sendUpdateError(res, e, 400); }
+});
 
 const backupBases = ['/admin/backup', '/admin/backups', '/admin/backup-update'];
 for (const base of backupBases) {
   api.get(base + '/status', requireAdmin, async (req, res) => {
-    try {
-      res.json({
-        ok: true,
-        version: backupManager.getAppVersion(),
-        latestBackup: backupManager.getLatestBackup(),
-        backups: backupManager.listBackups(),
-        update: await backupManager.checkUpdate()
-      });
-    } catch (e) {
+    try { res.json(await backupStatusPayload()); } catch (e) {
       res.status(500).json({ error: String(e && e.message ? e.message : e) });
     }
   });
@@ -1306,7 +1532,8 @@ for (const base of backupBases) {
 
   api.post(base + '/create', requireAdmin, async (req, res) => {
     try {
-      const meta = await backupManager.createBackup({ keep: 20 });
+      // retention comes from the configured backup.retention.count setting
+      const meta = await backupManager.createBackup({});
       res.json({ ok: true, backup: meta, latestBackup: backupManager.getLatestBackup() });
     } catch (e) {
       res.status(500).json({ error: String(e && e.message ? e.message : e) });
@@ -1406,9 +1633,7 @@ for (const base of updateBases) {
 
 // convenience combined alias used by UI
 api.get('/admin/backup-update/status', requireAdmin, async (req, res) => {
-  try {
-    res.json({ ok: true, version: backupManager.getAppVersion(), latestBackup: backupManager.getLatestBackup(), backups: backupManager.listBackups(), update: await backupManager.checkUpdate() });
-  } catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
+  try { res.json(await backupStatusPayload()); } catch (e) { res.status(500).json({ error: String(e && e.message ? e.message : e) }); }
 });
 
 // ── GitHub Releases updater (admin-only) ──
@@ -1529,7 +1754,10 @@ const SETTING_DEFAULTS = {
   'sms.api_key': '',
   'sms.token': '',
   'sms.sender': '',
-  // GitHub Releases updater (server-side config; token comes from env, never stored here)
+
+  // GitHub Releases updater: repository owner/name live server-side here.
+  // The token itself is NEVER stored in the database — it is read from the
+  // process environment (GITHUB_TOKEN / GITHUB_UPDATE_TOKEN / GH_TOKEN).
   'update.github.owner': '',
   'update.github.repo': '',
 };
@@ -1695,7 +1923,17 @@ api.delete('/shipping-methods/:id', requireAdmin, (req, res) => {
   } catch (_) {}
   res.json({ ok: true });
 });
-api.get('/settings', (req, res) => { res.json(readSettings()); });
+// GET /api/settings is intentionally public for the storefront, so the
+// updater repository (which may name a private repo) is only revealed to an
+// authenticated admin — never to anonymous callers.
+api.get('/settings', (req, res) => {
+  const out = readSettings();
+  if (!getAdminAuth(req)) {
+    delete out['update.github.owner'];
+    delete out['update.github.repo'];
+  }
+  res.json(out);
+});
 // Inverse of deriveSeoTemplate: turn whatever the admin submitted back into a
 // {name} template, so a literal site name is never persisted alongside store.name.
 function toSeoTemplate(v, storeName) {
@@ -2160,7 +2398,7 @@ api.get('/users/:id/detail', requireAdmin, (req, res) => {
   const addresses = db.prepare('SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC').all(req.params.id).map(mapAddress);
   const orders = db.prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC').all(req.params.id);
   const itemsStmt = db.prepare('SELECT * FROM order_items WHERE order_id = ?');
-  const mappedOrders = orders.map(o => mapOrder(o, itemsStmt.all(o.id)));
+  const mappedOrders = orders.map(o => mapOrder(o, itemsStmt.all(o.id), { admin: true }));
   let cart = [];
   try { const r=db.prepare('SELECT items_json FROM carts WHERE user_id = ?').get(req.params.id); if(r) cart=JSON.parse(r.items_json||'[]'); } catch(_){}
   let wishlist = [];
@@ -2796,7 +3034,7 @@ api.get('/orders', requireAdmin, (req, res) => {
   const itemsStmt = db.prepare('SELECT * FROM order_items WHERE order_id = ?');
   const userStmt = db.prepare('SELECT id, first_name, last_name, mobile, email FROM users WHERE id = ?');
   res.json(orders.map((o) => {
-    const mapped = mapOrder(o, itemsStmt.all(o.id));
+    const mapped = mapOrder(o, itemsStmt.all(o.id), { admin: true });
     const u = o.user_id ? userStmt.get(o.user_id) : null;
     mapped.customer = u
       ? { id: u.id, firstName: u.first_name, lastName: u.last_name, mobile: u.mobile, email: u.email || '' }
@@ -2878,7 +3116,8 @@ api.get('/admin/transactions/:orderId', requireAdmin, (req, res) => {
       u.mobile AS user_mobile, u.email AS user_email FROM orders o LEFT JOIN users u ON u.id = o.user_id WHERE o.id = ?`).get(req.params.orderId);
   if (!o) return res.status(404).json({ error: 'Transaction not found' });
   const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(o.id);
-  const order = mapOrder(o, items);
+  const order = mapOrder(o, items, { admin: true });
+  order.selectedCard = orderSelectedCard(o);
   order.customer = o.user_id ? { id: o.user_id, firstName: '', lastName: o.user_name || '', name: o.user_name || '', mobile: o.user_mobile || '', email: o.user_email || '' } : null;
   let events = [];
   try { events = db.prepare('SELECT id, event, detail, created_at FROM payment_events WHERE order_id = ? ORDER BY id').all(o.id); } catch (_) {}
@@ -2901,7 +3140,8 @@ api.get('/orders/:id', (req, res) => {
   const auth = getAuthUser(req);
   let admin=null; try{ admin=getAdminAuth(req); }catch(e){}
   if (!admin && auth && o.user_id && o.user_id !== auth.row.id) return res.status(403).json({ error: 'Forbidden' });
-  const mapped = mapOrder(o, db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(o.id));
+  const mapped = mapOrder(o, db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(o.id), { admin: !!admin });
+  if (admin) mapped.selectedCard = orderSelectedCard(o);
   if (o.user_id) mapped.customer = { id: o.user_id, firstName: o.first_name || '', lastName: o.last_name || '', mobile: o.user_mobile || '', email: o.user_email || '' };
   res.json(mapped);
 });
@@ -3109,6 +3349,17 @@ api.post('/orders', orderLimiter, (req, res) => {
     return res.status(409).json({ error: 'Payment method is disabled: ' + paymentMethod });
   }
   const paymentStatus = paymentMethod === 'cod' ? 'unpaid' : 'pending';
+  // Card-to-card extras: persist exactly what the customer chose at checkout.
+  // The receipt URL is validated (format + the file must exist in the receipts
+  // directory) so a crafted payload can never point at another upload, and the
+  // selected card id is only stored for card orders — orders that predate this
+  // simply keep NULL and are never backfilled from current settings.
+  const receiptUrl = paymentMethod === 'card'
+    ? normalizeCardReceiptUrl(b.cardReceiptUrl ?? b.card_receipt_url ?? b.receiptUrl)
+    : null;
+  const selectedCardId = paymentMethod === 'card'
+    ? normalizeSelectedCardId(b.cardId ?? b.card_id ?? b.selectedCardId)
+    : null;
   // Admin approval gate: card-to-card orders await payment approval, COD
   // orders await order approval. Only online orders start as 'pending'.
   const awaitingPaymentApproval = paymentMethod === 'card';
@@ -3125,12 +3376,12 @@ api.post('/orders', orderLimiter, (req, res) => {
     const dec = db.prepare('UPDATE products SET stock_count = stock_count - ?, in_stock = CASE WHEN stock_count - ? > 0 THEN 1 ELSE 0 END WHERE id = ? AND stock_count >= ?');
     db.prepare(`INSERT INTO orders
       (id, user_id, date, status, status_text, total, items_count, shipping, discount, discount_code,
-       address, address_id, payment_method, payment_status, timeline_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+       address, address_id, payment_method, payment_status, timeline_json, receipt_url, selected_card_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .run(id, userId, b.date || '', initialStatus, initialStatusText,
         total, itemsCount, shipping, discount, discountCode,
         addressText, addressId, paymentMethod, paymentStatus,
-        serverTimeline);
+        serverTimeline, receiptUrl, selectedCardId);
     for (const it of serverItems) {
       const optionsJson = JSON.stringify(it.options || []);
       ins.run(id, it.productId, it.name, it.price, it.quantity, optionsJson);
@@ -3265,7 +3516,9 @@ api.patch('/orders/:id', requireAdmin, (req, res) => {
     throw e;
   }
   const updated = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
-  res.json(mapOrder(updated, db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(updated.id)));
+  const outOrder = mapOrder(updated, db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(updated.id), { admin: true });
+  outOrder.selectedCard = orderSelectedCard(updated);
+  res.json(outOrder);
 });
 
 // ── Payment gateway seam (STUB — no external gateway connected) ──
@@ -4781,6 +5034,13 @@ api.post('/support/chat/:id/attachment', uploadChat.single('file'), (req,res)=>{
   db.prepare("UPDATE tickets SET status='open', updated_at=datetime('now') WHERE id=?").run(req.params.id);
   res.status(201).json({ok:true, url});
 });
+// ── Private payment receipts ────────────────────────────────────────────
+// A card-to-card receipt is customer payment evidence: it is NEVER served
+// from the public static tree. Admins read it through GET /api/orders/:id/receipt
+// (requireAdmin), which resolves only the file recorded on that one order.
+app.use('/uploads/receipts', (req, res) => {
+  res.status(401).json({ error: 'Receipt images require admin authorization', code: 'receipt_unauthorized' });
+});
 try{ app.use('/uploads', require('express').static(require('path').join(__dirname,'..','uploads'))); }catch(_){}
 
 // Bank-transfer receipt upload (checkout payment page).
@@ -4810,6 +5070,28 @@ const receiptUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024, files: 1 },
   fileFilter: receiptFileFilter,
 });
+// Card-to-card order extras. A stored receipt URL always has the exact shape
+// "/uploads/receipts/<flat-file>" and must point at a file the upload endpoint
+// actually wrote, so a crafted order payload can never reference an unrelated
+// upload or traverse out of the receipts directory.
+function normalizeCardReceiptUrl(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return null;
+  const m = /^\/uploads\/receipts\/([A-Za-z0-9][A-Za-z0-9._-]*)$/.exec(s);
+  if (!m) return null;
+  const name = m[1];
+  if (name.indexOf('..') !== -1) return null;
+  try {
+    const full = path.join(receiptUploadDir, name);
+    if (path.dirname(full) !== path.resolve(receiptUploadDir)) return null;
+    return require('fs').statSync(full).isFile() ? s : null;
+  } catch (_) { return null; }
+}
+function normalizeSelectedCardId(v) {
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
 function validateReceiptMagic(filePath, mime) {
   try {
     const fd = require('fs').openSync(filePath, 'r');
@@ -4844,6 +5126,33 @@ api.post('/orders/card-receipt', receiptLimiter, (req, res) => {
       return res.status(500).json({ error: 'آپلود رسید ناموفق بود. لطفاً دوباره تلاش کنید.' });
     }
   });
+});
+
+// Admin-only receipt image. Streams exactly the file recorded on the order:
+// no request-controlled path, no traversal, no unrelated upload can be read.
+api.get('/orders/:id/receipt', requireAdmin, (req, res) => {
+  const row = db.prepare('SELECT id, receipt_url FROM orders WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Order not found', code: 'order_not_found' });
+  const url = String(row.receipt_url || '');
+  const m = /^\/uploads\/receipts\/([A-Za-z0-9][A-Za-z0-9._-]*)$/.exec(url);
+  if (!m || m[1].indexOf('..') !== -1) {
+    return res.status(404).json({ error: 'No receipt uploaded for this order', code: 'no_receipt' });
+  }
+  const full = path.join(receiptUploadDir, m[1]);
+  if (path.dirname(full) !== path.resolve(receiptUploadDir)) {
+    return res.status(400).json({ error: 'Invalid receipt path', code: 'invalid_receipt_path' });
+  }
+  let st = null;
+  try { st = require('fs').statSync(full); } catch (_) { st = null; }
+  if (!st || !st.isFile()) {
+    return res.status(404).json({ error: 'Receipt file is missing', code: 'receipt_missing' });
+  }
+  const types = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif' };
+  res.setHeader('Content-Type', types[path.extname(full).toLowerCase()] || 'application/octet-stream');
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Disposition', 'inline; filename="' + path.basename(full).replace(/["\\]/g, '') + '"');
+  return res.sendFile(full);
 });
 
 // ── Articles (SQLite-backed; public read, admin write) ──
@@ -5957,5 +6266,12 @@ module.exports = app;
 
 if (require.main === module) {
   const PORT = parseInt(process.env.PORT, 10) || 3000;
-  app.listen(PORT, () => console.log(`Camzy server running at http://127.0.0.1:${PORT}`));
+  app.listen(PORT, () => {
+    console.log(`Camzy server running at http://127.0.0.1:${PORT}`);
+    // Daily production backup scheduler (00:00 server-local by default).
+    try {
+      const started = backupScheduler.startBackupScheduler();
+      console.log('Camzy backup scheduler:', JSON.stringify(started.schedule || started));
+    } catch (e) { logError('backup scheduler start failed', { error: String((e && e.message) || e) }); }
+  });
 }

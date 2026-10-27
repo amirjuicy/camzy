@@ -2193,12 +2193,15 @@
            </div>
          </div>
 
-<section class="admin-view" data-view="backup-update">
+
+        <!-- ─── Backup & Update (پشتیبان‌گیری و آپدیت) ───────────── -->
+        <section class="admin-view" data-view="backup-update">
           <div class="adm-card">
             <div class="adm-card__header">
               <div class="adm-card__titles">
                 <h2 class="adm-card__title">پشتیبان‌گیری و آپدیت</h2>
-                <span class="adm-card__sub">مدیریت نسخه پشتیبان و به‌روزرسانی برنامه (فقط مدیران)</span>
+
+                <span class="adm-card__sub">نسخه پشتیبان و به‌روزرسانی برنامه از GitHub Releases — فقط مدیران</span>
               </div>
             </div>
             <div class="adm-card__body">
@@ -2216,36 +2219,82 @@
                   <input class="input" type="text" id="bu-status" readonly placeholder="—">
                 </div>
                 <div class="adm-field">
-                  <label class="adm-field__label">به‌روزرسانی موجود</label>
+
+                  <label class="adm-field__label">به‌روزرسانی محلی موجود</label>
                   <input class="input" type="text" id="bu-update" readonly placeholder="—">
                 </div>
               </div>
               <div class="adm-form-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
                 <button type="button" class="btn btn-primary" id="bu-create">ایجاد نسخه پشتیبان</button>
                 <button type="button" class="btn btn-secondary" id="bu-download">دانلود نسخه پشتیبان</button>
-                <button type="button" class="btn btn-accent" id="bu-update-btn">بررسی و نصب آپدیت</button>
+
+
               </div>
               <div id="bu-selected-info" style="margin-top:10px;color:var(--text-muted)">بسته انتخاب‌شده: —</div>
 
-              <div class="adm-card" style="margin-top:16px">
+              <div class="adm-card" id="bu-schedule-card" style="margin-top:16px">
                 <div class="adm-card__header">
                   <div class="adm-card__titles">
-                    <h2 class="adm-card__title">مخزن GitHub</h2>
-                    <span class="adm-card__sub">پیکربندی سمت سرور (owner/name در تنظیمات ذخیره می‌شود؛ توکن فقط از طریق متغیر محیطی GITHUB_TOKEN)</span>
+                    <h2 class="adm-card__title">پشتیبان‌گیری خودکار روزانه</h2>
+                    <span class="adm-card__sub">هر روز ساعت ۰۰:۰۰ به وقت سرور — پایگاه داده و فایل‌های آپلودشده (تصاویر محصولات و رسیدها)؛ در حذف نسخه‌ها فقط آرشیوهای همین سیستم لحاظ می‌شوند</span>
                   </div>
                 </div>
                 <div class="adm-card__body">
                   <div class="adm-form-grid">
                     <div class="adm-field">
-                      <label class="adm-field__label">Owner</label>
-                      <input class="input" type="text" id="bu-gh-owner" placeholder="owner">
+                      <label class="adm-field__label">وضعیت</label>
+                      <label style="display:flex;gap:8px;align-items:center;font-size:13px;padding-top:6px"><input type="checkbox" id="bu-sched-enabled"> پشتیبان‌گیری خودکار فعال باشد</label>
                     </div>
                     <div class="adm-field">
-                      <label class="adm-field__label">Repository</label>
-                      <input class="input" type="text" id="bu-gh-repo" placeholder="repo">
+                      <label class="adm-field__label">زمان اجرا (ساعت محلی سرور)</label>
+                      <input class="input" type="text" id="bu-sched-time" dir="ltr" placeholder="00:00">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">منطقه زمانی (IANA)</label>
+                      <input class="input" type="text" id="bu-sched-tz" dir="ltr" placeholder="Asia/Tehran">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">نگهداری (حداکثر تعداد نسخه)</label>
+                      <input class="input" type="number" id="bu-retention-count" min="1" max="365" dir="ltr" placeholder="20">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">اجرای بعدی</label>
+                      <input class="input" type="text" id="bu-sched-next" readonly placeholder="—">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">آخرین پشتیبان موفق</label>
+                      <input class="input" type="text" id="bu-sched-last-success" readonly placeholder="—">
                     </div>
                   </div>
-                  <div style="margin-top:8px;color:var(--text-muted);font-size:12px">وضعیت توکن: <span id="bu-gh-token-status">—</span></div>
+                  <div id="bu-sched-status" style="margin-top:10px;font-size:13px;line-height:1.9;color:var(--text-muted)">—</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+                    <button type="button" class="btn btn-primary" id="bu-sched-save">ذخیره زمان‌بندی و نگهداری</button>
+                  </div>
+                  <div id="bu-sched-msg" style="margin-top:8px;color:var(--text-muted)"></div>
+                </div>
+              </div>
+
+              <div class="adm-card" style="margin-top:16px">
+                <div class="adm-card__header">
+                  <div class="adm-card__titles">
+                    <h2 class="adm-card__title">مخزن GitHub</h2>
+
+                    <span class="adm-card__sub">Owner/Repository سمت سرور ذخیره می‌شود؛ توکن فقط از متغیر محیطی GITHUB_TOKEN (با دسترسی فقط‌خواندنی / read-only) خوانده می‌شود و هرگز به مرورگر نمی‌رود — مخزن عمومی بدون توکن هم کار می‌کند</span>
+                  </div>
+                </div>
+                <div class="adm-card__body">
+                  <div class="adm-form-grid">
+                    <div class="adm-field">
+
+                      <label class="adm-field__label" for="bu-gh-owner">Owner</label>
+                      <input class="input" type="text" id="bu-gh-owner" placeholder="owner" dir="ltr" autocomplete="off">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label" for="bu-gh-repo">Repository</label>
+                      <input class="input" type="text" id="bu-gh-repo" placeholder="repo" dir="ltr" autocomplete="off">
+                    </div>
+                  </div>
+                  <div style="margin-top:8px;color:var(--text-muted);font-size:12px">وضعیت توکن (سرور): <span id="bu-gh-token-status">—</span></div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
                     <button type="button" class="btn btn-primary" id="bu-gh-save">ذخیره مخزن</button>
                     <button type="button" class="btn btn-accent" id="bu-gh-check">بررسی آخرین Release</button>
@@ -2257,27 +2306,30 @@
               <div class="adm-card" id="bu-gh-release-card" style="margin-top:16px;display:none">
                 <div class="adm-card__header">
                   <div class="adm-card__titles">
-                    <h2 class="adm-card__title">آخرین Release گیت‌هاب</h2>
-                    <span class="adm-card__sub">نسخه، یادداشت‌ها، تاریخ انتشار و فایل ZIP</span>
+
+                    <h2 class="adm-card__title">آخرین Release منتشرشده</h2>
+                    <span class="adm-card__sub">نسخه، یادداشت‌ها، تاریخ انتشار و فایل ZIP به‌روزرسانی</span>
                   </div>
                 </div>
                 <div class="adm-card__body">
                   <div class="adm-form-grid">
                     <div class="adm-field">
-                      <label class="adm-field__label">نسخه</label>
-                      <input class="input" type="text" id="bu-gh-version" readonly>
+
+                      <label class="adm-field__label">نسخه (Tag)</label>
+                      <input class="input" type="text" id="bu-gh-version" readonly dir="ltr">
                     </div>
                     <div class="adm-field">
                       <label class="adm-field__label">تاریخ انتشار</label>
                       <input class="input" type="text" id="bu-gh-published" readonly>
                     </div>
                     <div class="adm-field">
-                      <label class="adm-field__label">فایل ZIP</label>
-                      <input class="input" type="text" id="bu-gh-asset" readonly>
+
+                      <label class="adm-field__label">فایل ZIP به‌روزرسانی</label>
+                      <input class="input" type="text" id="bu-gh-asset" readonly dir="ltr">
                     </div>
                     <div class="adm-field">
                       <label class="adm-field__label">حجم</label>
-                      <input class="input" type="text" id="bu-gh-size" readonly>
+                      <input class="input" type="text" id="bu-gh-size" readonly dir="ltr">
                     </div>
                   </div>
                   <div class="adm-field" style="margin-top:8px">
@@ -2289,6 +2341,84 @@
                     <button type="button" class="btn btn-primary" id="bu-gh-download">دانلود ZIP به سرور (data/updates)</button>
                   </div>
                   <div id="bu-gh-release-msg" style="margin-top:8px;color:var(--text-muted)"></div>
+                </div>
+              </div>
+
+              <div class="adm-card" style="margin-top:16px">
+                <div class="adm-card__header">
+                  <div class="adm-card__titles">
+
+                    <h2 class="adm-card__title">اعتبارسنجی بسته آپدیت</h2>
+                    <span class="adm-card__sub">ساختار ZIP و مسیرهای محافظت‌شده، پیش از نصب بررسی می‌شود</span>
+                  </div>
+                </div>
+                <div class="adm-card__body">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                    <button type="button" class="btn btn-secondary" id="bu-validate">اعتبارسنجی بسته انتخاب‌شده</button>
+                  </div>
+                  <pre id="bu-validation" style="margin-top:10px;white-space:pre-wrap;font-size:12px;color:var(--text-muted);background:transparent"></pre>
+                  <div id="bu-validation-msg" style="color:var(--text-muted);font-size:12px"></div>
+                </div>
+              </div>
+
+              <div class="adm-card" id="bu-confirm-panel" style="margin-top:16px;display:none;border:1px solid var(--border-color, #d8d8d8)">
+                <div class="adm-card__header">
+                  <div class="adm-card__titles">
+                    <h2 class="adm-card__title">تأیید نصب به‌روزرسانی</h2>
+                    <span class="adm-card__sub">نسخه و نام فایل را دقیقاً بررسی کنید؛ نصب بدون تأیید صریح انجام نمی‌شود</span>
+                  </div>
+                </div>
+                <div class="adm-card__body">
+                  <div class="adm-form-grid">
+                    <div class="adm-field">
+                      <label class="adm-field__label">نسخه دقیق</label>
+                      <input class="input" type="text" id="bu-confirm-version" readonly dir="ltr">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">فایل بسته</label>
+                      <input class="input" type="text" id="bu-confirm-file" readonly dir="ltr">
+                    </div>
+                  </div>
+                  <ul style="margin:10px 0 0;padding-inline-start:18px;font-size:12px;color:var(--text-muted);line-height:1.9">
+                    <li>پیش از نصب، یک نسخه پشتیبان کامل ایجاد و صحت‌سنجی می‌شود.</li>
+                    <li>پایگاه داده، فایل‌های آپلودی، اسرار (‎.env)، پشتیبان‌ها و لاگ‌ها حفظ می‌شوند.</li>
+                    <li>پس از نصب ممکن است سرور نیاز به راه‌اندازی مجدد داشته باشد؛ سرور به‌صورت خودکار ری‌استارت نمی‌شود.</li>
+                  </ul>
+                  <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
+                    <input type="checkbox" id="bu-confirm-check" style="margin-top:3px">
+                    <span>تأیید می‌کنم نسخه <b id="bu-confirm-summary" dir="ltr"></b> با فایل فوق نصب شود.</span>
+                  </label>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+                    <button type="button" class="btn btn-accent" id="bu-confirm-apply" disabled>نصب به‌روزرسانی</button>
+                    <button type="button" class="btn btn-secondary" id="bu-confirm-cancel">انصراف</button>
+                  </div>
+                  <div id="bu-confirm-msg" style="margin-top:8px;color:var(--text-muted)"></div>
+                </div>
+              </div>
+
+              <div class="adm-card" id="bu-restart-notice" style="margin-top:16px;display:none">
+                <div class="adm-card__header">
+                  <div class="adm-card__titles">
+                    <h2 class="adm-card__title">نصب انجام شد — ری‌استارت سرور</h2>
+                    <span class="adm-card__sub">سرور به‌صورت خودکار ری‌استارت نشد</span>
+                  </div>
+                </div>
+                <div class="adm-card__body">
+                  <div id="bu-restart-text" style="font-size:13px;line-height:1.9"></div>
+                </div>
+              </div>
+
+              <div class="adm-card" style="margin-top:16px">
+                <div class="adm-card__header">
+                  <div class="adm-card__titles">
+                    <h2 class="adm-card__title">نصب آپدیت</h2>
+                    <span class="adm-card__sub">یک بسته را انتخاب و بررسی کنید، سپس با تأیید صریح نصب کنید</span>
+                  </div>
+                </div>
+                <div class="adm-card__body">
+                  <div class="adm-form-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button type="button" class="btn btn-accent" id="bu-update-btn">بررسی و نصب آپدیت</button>
+                  </div>
                 </div>
               </div>
 
@@ -2312,7 +2442,8 @@
                 <div class="adm-card__header">
                   <div class="adm-card__titles">
                     <h2 class="adm-card__title">بسته‌های آپدیت</h2>
-                    <span class="adm-card__sub">یک بسته را انتخاب کنید، سپس بررسی/نصب را اجرا کنید</span>
+
+                    <span class="adm-card__sub">بسته‌ها در data/updates/ ذخیره می‌شوند</span>
                   </div>
                 </div>
                 <div class="adm-table-wrap">
@@ -2322,12 +2453,81 @@
                   </table>
                 </div>
               </div>
+
+
               <div id="bu-message" style="margin-top:12px;color:var(--text-muted)"></div>
+
               <div class="adm-table-wrap" style="margin-top:16px">
                 <table class="adm-table" id="bu-backups-table">
                   <thead><tr><th>فایل</th><th>تاریخ</th><th>حجم</th><th>وضعیت</th><th>عملیات</th></tr></thead>
                   <tbody><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">در حال بارگذاری…</td></tr></tbody>
                 </table>
+              </div>
+
+              <!-- ─── Upload & Restore Backup ──────────────────────── -->
+              <div class="adm-card" id="bu-restore-card" style="margin-top:16px">
+                <div class="adm-card__header">
+                  <div class="adm-card__titles">
+                    <h2 class="adm-card__title">آپلود و بازیابی نسخه پشتیبان</h2>
+                    <span class="adm-card__sub">فقط آرشیو ZIP تولیدشده توسط سیستم پشتیبان کامزی (حداکثر ۱۰۰ مگابایت) — بسته‌های آپدیت از GitHub از این بخش پذیرفته نمی‌شوند و باید از «نصب آپدیت» استفاده شود</span>
+                  </div>
+                </div>
+                <div class="adm-card__body">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                    <input type="file" id="bu-restore-file" accept=".zip,application/zip" class="input" style="max-width:360px">
+                    <button type="button" class="btn btn-primary" id="bu-restore-upload">آپلود و اعتبارسنجی</button>
+                  </div>
+                  <div class="adm-form-grid" style="margin-top:12px">
+                    <div class="adm-field">
+                      <label class="adm-field__label">فایل آپلودشده</label>
+                      <input class="input" type="text" id="bu-restore-name" readonly dir="ltr" placeholder="—">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">حجم</label>
+                      <input class="input" type="text" id="bu-restore-size" readonly dir="ltr" placeholder="—">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">زمان ساخت نسخه پشتیبان</label>
+                      <input class="input" type="text" id="bu-restore-time" readonly placeholder="—">
+                    </div>
+                    <div class="adm-field">
+                      <label class="adm-field__label">نتیجه اعتبارسنجی</label>
+                      <input class="input" type="text" id="bu-restore-result" readonly placeholder="—">
+                    </div>
+                  </div>
+                  <pre id="bu-restore-validation" style="margin-top:10px;white-space:pre-wrap;font-size:12px;color:var(--text-muted);background:transparent"></pre>
+
+                  <div class="adm-card" id="bu-restore-confirm" style="display:none;margin-top:12px;border:1px solid var(--border-color, #d8d8d8)">
+                    <div class="adm-card__header">
+                      <div class="adm-card__titles">
+                        <h2 class="adm-card__title">تأیید بازیابی نسخه پشتیبان</h2>
+                        <span class="adm-card__sub">بازیابی جایگزین پایگاه داده و فایل‌های آپلودشده فعلی می‌شود</span>
+                      </div>
+                    </div>
+                    <div class="adm-card__body">
+                      <ul style="margin:0;padding-inline-start:18px;font-size:12px;color:var(--text-muted);line-height:1.9">
+                        <li>پیش از هر تغییری، آرشیو دوباره اعتبارسنجی می‌شود؛ سپس یک نسخه پشتیبان امنیتی از داده‌های فعلی ساخته و صحت‌سنجی می‌شود.</li>
+                        <li>اگر اعتبارسنجی یا ساخت پشتیبان امنیتی ناموفق باشد، هیچ داده‌ای تغییر نمی‌کند.</li>
+                        <li>پایگاه داده و فایل‌های آپلودشده با هم بازیابی می‌شوند؛ اسرار (‎.env)، پیکربندی و کد برنامه دست‌نخورده می‌مانند.</li>
+                        <li>اجرای هم‌زمان پشتیبان، بازیابی و آپدیت مسدود است؛ ری‌استارت سرور به‌صورت خودکار انجام نمی‌شود.</li>
+                      </ul>
+                      <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px">
+                        <input type="checkbox" id="bu-restore-check" style="margin-top:3px">
+                        <span>تأیید می‌کنم نسخه پشتیبان <b id="bu-restore-summary" dir="ltr"></b> بازیابی شود و داده‌های فعلی جایگزین گردد.</span>
+                      </label>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+                        <button type="button" class="btn btn-danger" id="bu-restore-apply" disabled>بازیابی نسخه پشتیبان</button>
+                        <button type="button" class="btn btn-secondary" id="bu-restore-cancel">انصراف</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="bu-restore-msg" style="margin-top:8px;color:var(--text-muted)"></div>
+                  <ul style="margin:12px 0 0;padding-inline-start:18px;font-size:12px;color:var(--text-muted);line-height:1.9">
+                    <li>آرشیو آپلودشده پیش از پذیرش، از نظر ساختار، فراداده پشتیبان، صحت پایگاه داده و مسیرهای مجاز بررسی می‌شود؛ بسته آپدیت، آرشیو خراب، نفوذ مسیر (path traversal) و فایل‌های حساس رد می‌شوند.</li>
+                    <li>فایل‌های آپلودشده نامعتبر پاک می‌شوند و هیچ داده فعلی تا پیش از تأیید صریح شما تغییر نمی‌کند.</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>

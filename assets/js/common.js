@@ -1198,6 +1198,9 @@
     if (lastRenderedCartCount !== null && count > lastRenderedCartCount) bumpPdpCartIcon();
     lastRenderedCartCount = count;
     renderCartDrawer();
+    /* Product cards render their own add/stepper control, so every cart
+       change (card, cart page, mini-cart, PDP…) must refresh them too. */
+    syncProductCards();
   }
 
   function renderCartDrawer() {
@@ -1289,9 +1292,7 @@
       var pc = document.querySelector('.priceChanger[data-pricing="' + id + '"]');
       mode = (pc && pc.getAttribute('data-selected-mode')) || 'retail';
     } catch (e) {}
-    var key = addToCart(id, mode);
-    try { syncProductCards(); } catch (e) {}
-    return key;
+    return addToCart(id, mode);
   }
 
   function updateProductCardQty(id, delta) {

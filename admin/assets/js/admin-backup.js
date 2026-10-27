@@ -48,7 +48,82 @@
       var u = data.update || {};
       up.value = u.available ? ('بله — ' + (u.latestVersion || u.package || '')) : 'خیر';
     }
+    renderSchedule(data.schedule || null);
     renderBackups();
+  }
+
+  function scheduleMsg(text, type) {
+    var el = document.getElementById('bu-sched-msg');
+    if (el) { el.textContent = text || ''; el.style.color = type === 'danger' ? '#B91C22' : (type === 'success' ? '#15803D' : 'var(--text-muted)'); }
+  }
+
+  // Schedule card: settings inputs + next run, last success, failure/stale state.
+  function renderSchedule(s) {
+    var en = document.getElementById('bu-sched-enabled');
+    if (en) en.checked = !!(s && s.enabled);
+    var tm = document.getElementById('bu-sched-time'); if (tm && s) tm.value = s.time || '00:00';
+    var tz = document.getElementById('bu-sched-tz'); if (tz && s) tz.value = s.timezone || '';
+    var rc = document.getElementById('bu-retention-count'); if (rc && s) rc.value = s.retentionCount || 20;
+    var nr = document.getElementById('bu-sched-next');
+    if (nr) nr.value = (s && s.nextRun) ? new Date(s.nextRun).toLocaleString('fa-IR') : '—';
+    var ls = document.getElementById('bu-sched-last-success');
+    if (ls) {
+      ls.value = (s && s.lastSuccess && s.lastSuccess.createdAt)
+        ? new Date(s.lastSuccess.createdAt).toLocaleString('fa-IR') + ' (' + (s.lastSuccess.filename || '') + ')'
+        : '—';
+    }
+    var st = document.getElementById('bu-sched-status');
+    if (!st) return;
+    if (!s) { st.textContent = '—'; st.style.color = 'var(--text-muted)'; return; }
+    if (!s.enabled) {
+      st.style.color = '#B91C22';
+      st.textContent = 'پشتیبان‌گیری خودکار غیرفعال است؛ فقط پشتیبان دستی ساخته می‌شود.';
+      return;
+    }
+    var lines = [];
+    lines.push('زمان‌بندی: هر روز ' + s.time + ' به وقت ' + s.timezone +
+      (s.timezoneSource === 'system' ? ' (از سیستم)' : ''));
+    lines.push('اجرای بعدی: ' + (s.nextRun ? new Date(s.nextRun).toLocaleString('fa-IR') : '—') +
+      (s.due ? ' — در انتظار اجرا (' + (s.dueReason || 'due') + ')' : ''));
+    lines.push('آخرین پشتیبان موفق: ' + (s.lastSuccess
+      ? new Date(s.lastSuccess.createdAt).toLocaleString('fa-IR') + ' — ' + (s.lastSuccess.filename || '')
+      : '—') + ' | نگهداری: ' + s.retentionCount + ' نسخه');
+    if (s.lastAttempt && s.lastAttempt.status === 'failed') {
+      lines.push('آخرین تلاش ناموفق: ' + new Date(s.lastAttempt.createdAt).toLocaleString('fa-IR') +
+        ' — ' + (s.lastAttempt.error || 'خطای ناشناخته') +
+        (s.attemptsToday ? (' (تلاش‌های این بازه: ' + s.attemptsToday + '/' + s.maxAttemptsPerSlot + ')') : ''));
+    }
+    if (s.stale) {
+      var why = s.staleReason === 'no_successful_backup' ? 'هیچ پشتیبان موفقی ثبت نشده است'
+        : s.staleReason === 'last_success_too_old' ? ('آخرین پشتیبان موفق بیش از ' + s.staleAfterHours + ' ساعت پیش است')
+        : s.staleReason;
+      lines.push('⚠ وضعیت: ' + why);
+    }
+    if (s.runningOperation) lines.push('یک عملیات پشتیبان/آپدیت در حال اجراست: ' + s.runningOperation);
+    st.style.whiteSpace = 'pre-wrap';
+    st.textContent = lines.join('\n');
+    st.style.color = s.stale ? '#B91C22' : 'var(--text-muted)';
+  }
+
+  function saveScheduleSettings() {
+    var btn = document.getElementById('bu-sched-save');
+    var body = {
+      enabled: !!(document.getElementById('bu-sched-enabled') || {}).checked,
+      time: String((document.getElementById('bu-sched-time') || {}).value || '').trim(),
+      timezone: String((document.getElementById('bu-sched-tz') || {}).value || '').trim(),
+      retentionCount: Number((document.getElementById('bu-retention-count') || {}).value || 0)
+    };
+    if (btn) btn.disabled = true;
+    fetch('/api/admin/backup/settings', { method: 'PUT', headers: headers(true), body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error((res.body && res.body.error) || 'failed');
+        scheduleMsg('زمان‌بندی و نگهداری ذخیره شد', 'success');
+        renderSchedule(res.body && res.body.schedule);
+        loadStatus();
+      })
+      .catch(function (e) { scheduleMsg('خطا در ذخیره: ' + (e.message || e), 'danger'); })
+      .finally(function () { if (btn) btn.disabled = false; });
   }
 
   function renderBackups() {
@@ -63,8 +138,8 @@
         '<td style="direction:ltr;text-align:left;font-size:12px">' + (b.filename || '') + '</td>' +
         '<td style="font-size:12px">' + (b.createdAt ? new Date(b.createdAt).toLocaleString('fa-IR') : '—') + '</td>' +
         '<td>' + fmtBytes(b.size) + '</td>' +
-        '<td>' + (b.status || '—') + '</td>' +
-        '<td><button type="button" class="btn btn-sm" data-bu-download="' + (b.filename || '') + '">دانلود</button></td>' +
+        '<td>' + (b.status || '—') + (b.status === 'failed' && b.error ? ('<div style="font-size:11px;color:#B91C22" dir="ltr">' + String(b.error).replace(/[<>&"]/g, '') + '</div>') : '') + '</td>' +
+        '<td>' + (b.status === 'failed' ? '—' : '<button type="button" class="btn btn-sm" data-bu-download="' + (b.filename || '') + '">دانلود</button>') + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -231,7 +306,7 @@
     owner = String(owner).trim();
     repo = String(repo).trim();
     if (!owner || !repo) { ghMsg('Owner و Repository الزامی هستند', 'danger'); return; }
-    fetch('/api/settings', { method: 'PUT', headers: headers(true), body: JSON.stringify({ 'update.github.owner': owner, 'update.github.repo': repo }) })
+    fetch('/api/admin/updates/github/config', { method: 'PUT', headers: headers(true), body: JSON.stringify({ owner: owner, repo: repo }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
         if (!res.ok) throw new Error((res.body && res.body.error) || 'failed');
@@ -253,7 +328,12 @@
     var a = document.getElementById('bu-gh-asset'); if (a) a.value = asset ? asset.name : '—';
     var s = document.getElementById('bu-gh-size'); if (s) s.value = asset ? fmtBytes(asset.size) : '—';
     var n = document.getElementById('bu-gh-notes'); if (n) n.value = rel.body || '';
-    var d = document.getElementById('bu-gh-digest'); if (d) d.textContent = asset && asset.digest ? ('SHA-256: ' + asset.digest) : 'هش SHA-256 در Release موجود نیست (اعتبارسنجی انجام نمی‌شود)';
+    var d = document.getElementById('bu-gh-digest');
+    if (d) {
+      if (asset && asset.digest) d.textContent = 'SHA-256 انتشاریافته (' + (asset.digestSource || 'release') + '): ' + asset.digest;
+      else if (asset && asset.sha256Asset) d.textContent = 'فایل جانبی SHA-256 در Release موجود است: ' + asset.sha256Asset + ' (هنگام دانلود اعتبارسنجی می‌شود)';
+      else d.textContent = 'هش SHA-256 در Release منتشر نشده است؛ بسته بدون اعتبارسنجی هش دانلود می‌شود و این موضوع در پاسخ گزارش خواهد شد.';
+    }
   }
 
   function checkGitHubRelease() {
@@ -291,45 +371,310 @@
         if (b.filename) setSelectedPackage(b.filename);
         loadPackages();
         loadStatus();
-        var txt = 'دانلود انجام شد: ' + (b.filename || '') + ' (نسخه ' + (b.version || '—') + ')';
-        if (b.digestVerified) txt += ' — SHA-256 تأیید شد';
-        ghReleaseMsg(txt, 'success');
-        msg(txt, 'success');
+        var txt = 'دانلود انجام شد: ' + (b.savedPath || ('data/updates/' + (b.filename || ''))) +
+          ' — نسخه ' + (b.version || '—') + ' — فایل ' + (b.filename || '');
+        if (b.digestVerified) txt += ' — SHA-256 تأیید شد (' + (b.digestSource || 'release-digest') + ')';
+        else if (b.digest) txt += ' — اعتبارسنجی SHA-256 ناموفق بود';
+        else txt += ' — در Release هش SHA-256 منتشر نشده بود (بدون اعتبارسنجی هش)';
+        ghReleaseMsg(txt, b.digestVerified || !b.digest ? 'success' : 'info');
+        msg(txt, b.digestVerified || !b.digest ? 'success' : 'danger');
+        if (b.filename) runValidation(b.filename);
       })
-      .catch(function (e) { ghReleaseMsg('خطا در دانلود: ' + (e.message || e), 'danger'); })
+      .catch(function (e) { ghReleaseMsg('دانلود ناموفق: ' + (e.message || e), 'danger'); msg('دانلود ناموفق: ' + (e.message || e), 'danger'); })
       .finally(function () { if (btn) btn.disabled = false; });
   }
 
-  function checkAndInstallUpdate() {
-    var btn = document.getElementById('bu-update-btn');
-    if (!selectedPackage) { msg('ابتدا یک بسته آپدیت را انتخاب کنید', 'danger'); return; }
-    if (btn) btn.disabled = true;
-    msg('در حال بررسی به‌روزرسانی…', 'info');
-    fetch('/api/admin/backup/update/check', { method: 'POST', headers: headers(true), body: JSON.stringify({ package: selectedPackage }) })
+  /* ── Validation + explicit install confirmation ─────────────── */
+  function currentPackage() {
+    return selectedPackage || ghDownloadedFile || null;
+  }
+
+  function renderValidation(v, file) {
+    var el = document.getElementById('bu-validation');
+    if (!el) return;
+    if (!v) { el.textContent = ''; return; }
+    var lines = [];
+    lines.push('فایل: ' + (file || '—'));
+    lines.push('تعداد فایل‌ها: ' + (v.fileCount || 0) + ' — قابل نصب: ' + (v.installableFiles != null ? v.installableFiles : '—'));
+    lines.push('حجم پس از باز شدن: ' + fmtBytes(v.totalUncompressed || 0));
+    lines.push('نسخه داخل بسته: ' + (v.manifest && v.manifest.version ? v.manifest.version : '—'));
+    lines.push('مسیرهای محافظت‌شده (حفظ می‌شوند): ' + (v.protectedCount || 0));
+    var pe = v.protectedEntries || [];
+    pe.slice(0, 12).forEach(function (p) { lines.push('  - ' + p); });
+    if (pe.length > 12) lines.push('  … و ' + (pe.length - 12) + ' مورد دیگر');
+    el.textContent = lines.join('\n');
+  }
+
+  function runValidation(file) {
+    var el = document.getElementById('bu-validation-msg');
+    file = file || currentPackage();
+    if (!file) {
+      if (el) { el.style.color = 'var(--text-muted)'; el.textContent = 'ابتدا یک بسته را انتخاب یا دانلود کنید'; }
+      return Promise.resolve(null);
+    }
+    if (el) { el.style.color = 'var(--text-muted)'; el.textContent = 'در حال اعتبارسنجی…'; }
+    return fetch('/api/admin/updates/validate', { method: 'POST', headers: headers(true), body: JSON.stringify({ file: file }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
         if (!res.ok) throw new Error((res.body && res.body.error) || 'failed');
-        var u = res.body || {};
-        if (!u.available) { msg('به‌روزرسانی جدیدی یافت نشد', 'info'); return; }
-        var pkgName = u.package || selectedPackage;
-         var version = (ghRelease && ghRelease.release && ghRelease.release.version) ? ghRelease.release.version : (u.latestVersion || '—');
-        if (!confirm('نصب بسته «' + pkgName + '» با نسخه دقیق «' + version + '» انجام شود؟\nقبل از نصب یک پشتیبان کامل ایجاد و اعتبارسنجی می‌شود.')) return;
-        msg('در حال نصب به‌روزرسانی…', 'info');
-        return fetch('/api/admin/backup/update/apply', {
-          method: 'POST',
-          headers: headers(true),
-          body: JSON.stringify({ confirm: true, package: pkgName })
-        }).then(function (r2) { return r2.json().then(function (j2) { return { ok: r2.ok, body: j2 }; }); })
-          .then(function (res2) {
-            if (!res2.ok) throw new Error((res2.body && res2.body.error) || 'failed');
-            var txt = 'به‌روزرسانی با موفقیت نصب شد. ممکن است نیاز به راه‌اندازی مجدد سرور باشد؛ سرور به‌طور خودکار راه‌اندازی نشد.';
-             msg(txt, 'success');
-            loadStatus();
-            loadPackages();
-          });
+        renderValidation(res.body.validation, res.body.file);
+        if (el) { el.style.color = '#15803D'; el.textContent = 'بسته معتبر است' + (res.body.version ? (' — نسخه: ' + res.body.version) : ''); }
+        return res.body;
       })
-      .catch(function (e) { msg('خطا در به‌روزرسانی: ' + (e.message || e), 'danger'); })
+      .catch(function (e) {
+        renderValidation(null);
+        if (el) { el.style.color = '#B91C22'; el.textContent = 'بسته نامعتبر است: ' + (e.message || e); }
+        msg('اعتبارسنجی ناموفق: ' + (e.message || e), 'danger');
+        return null;
+      });
+  }
+
+  function hideConfirmPanel() {
+    var panel = document.getElementById('bu-confirm-panel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  /* The exact version + filename come from server-side validation of the
+     staged package — never from a client-side guess. */
+  function openInstallConfirm() {
+    var pkg = currentPackage();
+    if (!pkg) { msg('ابتدا یک بسته آپدیت را انتخاب یا از GitHub دانلود کنید', 'danger'); return; }
+    var panel = document.getElementById('bu-confirm-panel');
+    var chk = document.getElementById('bu-confirm-check');
+    var applyBtn = document.getElementById('bu-confirm-apply');
+    var cmsg = document.getElementById('bu-confirm-msg');
+    if (cmsg) { cmsg.textContent = 'در حال اعتبارسنجی بسته…'; cmsg.style.color = 'var(--text-muted)'; }
+    if (chk) chk.checked = false;
+    if (applyBtn) applyBtn.disabled = true;
+    if (panel) { panel.dataset.file = ''; panel.dataset.version = ''; panel.style.display = ''; }
+    fetch('/api/admin/updates/validate', { method: 'POST', headers: headers(true), body: JSON.stringify({ file: pkg }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error((res.body && res.body.error) || 'failed');
+        renderValidation(res.body.validation, res.body.file);
+        var v = document.getElementById('bu-confirm-version');
+        var f = document.getElementById('bu-confirm-file');
+        var s = document.getElementById('bu-confirm-summary');
+        if (v) v.value = res.body.version || '—';
+        if (f) f.value = res.body.file || pkg;
+        if (s) s.textContent = (res.body.version || '—') + ' با فایل ' + (res.body.file || pkg);
+        if (panel) {
+          panel.dataset.file = res.body.file || pkg;
+          panel.dataset.version = res.body.version || '';
+        }
+        if (cmsg) {
+          if (!res.body.version) {
+            cmsg.style.color = '#B91C22';
+            cmsg.textContent = 'این بسته فراداده نسخه ندارد؛ نصب با تأیید نسخه دقیق ممکن نیست.';
+          } else {
+            cmsg.style.color = '#15803D';
+            cmsg.textContent = 'بسته معتبر است. برای فعال شدن دکمه نصب، تیک تأیید را بزنید.';
+          }
+        }
+      })
+      .catch(function (e) {
+        if (cmsg) { cmsg.style.color = '#B91C22'; cmsg.textContent = 'نصب ممکن نیست — بسته نامعتبر است: ' + (e.message || e); }
+        msg('اعتبارسنجی ناموفق: ' + (e.message || e), 'danger');
+      });
+  }
+
+  function applyConfirmedUpdate() {
+    var panel = document.getElementById('bu-confirm-panel');
+    var chk = document.getElementById('bu-confirm-check');
+    var applyBtn = document.getElementById('bu-confirm-apply');
+    var cmsg = document.getElementById('bu-confirm-msg');
+    if (!panel) return;
+    var file = panel.dataset.file;
+    var version = panel.dataset.version;
+    if (!file || !version) {
+      if (cmsg) { cmsg.style.color = '#B91C22'; cmsg.textContent = 'نسخه یا فایل نامعتبر است؛ دوباره بررسی کنید.'; }
+      return;
+    }
+    if (!chk || !chk.checked) {
+      if (cmsg) { cmsg.style.color = '#B91C22'; cmsg.textContent = 'برای نصب باید تأیید صریح را علامت بزنید.'; }
+      return;
+    }
+    if (applyBtn) applyBtn.disabled = true;
+    if (cmsg) { cmsg.style.color = 'var(--text-muted)'; cmsg.textContent = 'در حال ایجاد و صحت‌سنجی پشتیبان، سپس نصب…'; }
+    fetch('/api/admin/backup/update/apply', {
+      method: 'POST',
+      headers: headers(true),
+      body: JSON.stringify({ confirm: true, version: version, filename: file })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error((res.body && res.body.error) || 'failed');
+        var b = res.body || {};
+        var txt = 'نصب انجام شد: نسخه ' + (b.version || version) + ' — فایل ' + (b.package || file) +
+          ' — فایل‌های تغییریافته: ' + (b.filesApplied != null ? b.filesApplied : '—') +
+          ' — پشتیبان: ' + (b.backup && b.backup.filename ? b.backup.filename : '—') + ' (صحت‌سنجی شد)';
+        if (cmsg) { cmsg.style.color = '#15803D'; cmsg.textContent = txt; }
+        msg('به‌روزرسانی با موفقیت نصب شد', 'success');
+
+        var notice = document.getElementById('bu-restart-notice');
+        var rtext = document.getElementById('bu-restart-text');
+        if (notice) notice.style.display = '';
+        if (rtext) {
+          var lines = [];
+          lines.push('نسخه نصب‌شده: ' + (b.version || version) + ' — فایل: ' + (b.package || file));
+          lines.push('پشتیبان ایجاد و صحت‌سنجی شد: ' + (b.backup && b.backup.filename ? b.backup.filename : '—'));
+          if (b.preserved && b.preserved.length) {
+            lines.push('مسیرهای حفظ‌شده (داده، آپلودها، اسرار، پشتیبان‌ها، لاگ‌ها): ' +
+              b.preserved.slice(0, 8).join('، ') + (b.preserved.length > 8 ? ' …' : ''));
+          }
+          lines.push('سرور برای اعمال کد جدید ممکن است به راه‌اندازی مجدد نیاز داشته باشد. ' +
+            'سرور به‌صورت خودکار ری‌استارت نشد — در صورت نیاز، ری‌استارت را دستی انجام دهید.');
+          rtext.style.whiteSpace = 'pre-wrap';
+          rtext.textContent = lines.join('\n');
+        }
+        hideConfirmPanel();
+        loadStatus();
+        loadPackages();
+      })
+      .catch(function (e) {
+        if (cmsg) { cmsg.style.color = '#B91C22'; cmsg.textContent = 'نصب ناموفق: ' + (e.message || e); }
+        msg('خطا در نصب: ' + (e.message || e), 'danger');
+      })
+      .finally(function () { if (applyBtn) applyBtn.disabled = !(chk && chk.checked); });
+  }
+
+  /* ── Upload & restore backup ────────────────────────────────────────
+     Separate from the GitHub update workflow: the archive is validated
+     server-side on upload, and restoring needs a second, explicit
+     confirmation. Nothing is restored before both steps succeed. */
+  var stagedRestore = null;      // filename of the validated, staged archive
+  var restoreValidated = false;
+
+  function restoreMsg(text, type) {
+    var el = document.getElementById('bu-restore-msg');
+    if (el) {
+      el.textContent = text || '';
+      el.style.whiteSpace = 'pre-wrap';
+      el.style.color = type === 'danger' ? '#B91C22' : (type === 'success' ? '#15803D' : 'var(--text-muted)');
+    }
+    try { if (window.CamzyAdmin && window.CamzyAdmin.showToast) window.CamzyAdmin.showToast(text, type || 'info'); } catch (_) {}
+  }
+
+  function setRestoreField(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.value = value == null || value === '' ? '—' : value;
+  }
+
+  function hideRestoreConfirm() {
+    var panel = document.getElementById('bu-restore-confirm');
+    if (panel) panel.style.display = 'none';
+    var chk = document.getElementById('bu-restore-check');
+    if (chk) chk.checked = false;
+    var applyBtn = document.getElementById('bu-restore-apply');
+    if (applyBtn) applyBtn.disabled = true;
+  }
+
+  function resetRestoreInfo() {
+    stagedRestore = null;
+    restoreValidated = false;
+    setRestoreField('bu-restore-name', '');
+    setRestoreField('bu-restore-size', '');
+    setRestoreField('bu-restore-time', '');
+    setRestoreField('bu-restore-result', '');
+    var v = document.getElementById('bu-restore-validation');
+    if (v) v.textContent = '';
+    hideRestoreConfirm();
+  }
+
+  function renderRestoreValidation(r, filename, size) {
+    setRestoreField('bu-restore-name', filename);
+    setRestoreField('bu-restore-size', fmtBytes(size));
+    setRestoreField('bu-restore-time', r && r.backupTimestamp ? new Date(r.backupTimestamp).toLocaleString('fa-IR') : '');
+    setRestoreField('bu-restore-result', r ? 'معتبر — ساختار، فراداده و صحت پایگاه داده تأیید شد' : 'نامعتبر');
+    var pre = document.getElementById('bu-restore-validation');
+    if (pre && r) {
+      var lines = [];
+      lines.push('فایل: ' + filename + ' — حجم: ' + fmtBytes(size));
+      lines.push('زمان ساخت پشتیبان: ' + (r.backupTimestamp ? new Date(r.backupTimestamp).toLocaleString('fa-IR') : 'در فراداده ثبت نشده'));
+      lines.push('نسخه داخل بسته: ' + (r.version || '—'));
+      lines.push('فایل‌های آرشیو: ' + (r.archiveFiles || 0) + ' — داده‌ها: ' + (r.fileCount || 0) + ' — فایل‌های آپلودی: ' + (r.uploadFiles || 0));
+      lines.push('صحت پایگاه داده: ' + (r.dbIntegrity === 'ok' ? 'ok' : '—'));
+      if (r.sha256) lines.push('SHA-256: ' + r.sha256);
+      pre.textContent = lines.join('\n');
+    }
+  }
+
+  function uploadRestoreBackup() {
+    var input = document.getElementById('bu-restore-file');
+    var btn = document.getElementById('bu-restore-upload');
+    if (!input || !input.files || !input.files.length) { restoreMsg('یک فایل ZIP نسخه پشتیبان انتخاب کنید', 'danger'); return; }
+    var file = input.files[0];
+    if (!/\.zip$/i.test(file.name)) { restoreMsg('فقط فایل ZIP پذیرفته می‌شود', 'danger'); return; }
+    resetRestoreInfo();
+    restoreMsg('در حال آپلود و اعتبارسنجی…', 'info');
+    if (btn) btn.disabled = true;
+    var fd = new FormData();
+    fd.append('file', file);
+    fetch('/api/admin/backup/restore/upload', {
+      method: 'POST',
+      headers: { Authorization: (function () { var t = adminToken(); return t ? 'Bearer ' + t : ''; })() },
+      body: fd
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error((res.body && res.body.error) || 'آپلود ناموفق');
+        var b = res.body || {};
+        var v = b.validation || {};
+        stagedRestore = b.filename || null;
+        restoreValidated = !!stagedRestore;
+        renderRestoreValidation(v, b.filename || file.name, b.size || file.size);
+        if (!stagedRestore) throw new Error('نام فایل آپلودشده دریافت نشد');
+        // explicit confirmation is required from this point on
+        var panel = document.getElementById('bu-restore-confirm');
+        var chk = document.getElementById('bu-restore-check');
+        var applyBtn = document.getElementById('bu-restore-apply');
+        var summary = document.getElementById('bu-restore-summary');
+        if (chk) chk.checked = false;
+        if (applyBtn) applyBtn.disabled = true;
+        if (summary) summary.textContent = b.filename;
+        if (panel) panel.style.display = '';
+        restoreMsg('آرشیو معتبر است و مرحله‌گذاری شد؛ برای بازیابی، تأیید صریح را علامت بزنید.', 'success');
+        if (input) input.value = '';
+      })
+      .catch(function (e) {
+        resetRestoreInfo();
+        setRestoreField('bu-restore-result', 'نامعتبر');
+        restoreMsg('آرشیو رد شد: ' + (e.message || e), 'danger');
+      })
       .finally(function () { if (btn) btn.disabled = false; });
+  }
+
+  function applyRestoreBackup() {
+    var chk = document.getElementById('bu-restore-check');
+    var applyBtn = document.getElementById('bu-restore-apply');
+    if (!stagedRestore || !restoreValidated) { restoreMsg('ابتدا یک نسخه پشتیبان آپلود و اعتبارسنجی کنید', 'danger'); return; }
+    if (!chk || !chk.checked) { restoreMsg('برای بازیابی باید تأیید صریح را علامت بزنید', 'danger'); return; }
+    if (applyBtn) applyBtn.disabled = true;
+    restoreMsg('در حال اعتبارسنجی مجدد، ساخت پشتیبان امنیتی و سپس بازیابی…', 'info');
+    fetch('/api/admin/backup/restore/apply', {
+      method: 'POST',
+      headers: headers(true),
+      body: JSON.stringify({ confirm: true, file: stagedRestore })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error((res.body && res.body.error) || 'بازیابی ناموفق');
+        var b = res.body || {};
+        var sb = b.safetyBackup || {};
+        var lines = [];
+        lines.push('بازیابی انجام شد: ' + (b.file || stagedRestore) + ' — پایگاه داده و ' + (b.uploadsRestored || 0) + ' فایل آپلودی.');
+        lines.push('پشتیبان امنیتی (صحت‌سنجی شد): ' + (sb.filename || '—'));
+        if (b.backupTimestamp) lines.push('زمان نسخه بازیابی‌شده: ' + new Date(b.backupTimestamp).toLocaleString('fa-IR'));
+        if (b.restartRequired) lines.push('سرور برای دیدن پایگاه داده بازیابی‌شده باید به‌صورت دستی ری‌استارت شود — ری‌استارت خودکار انجام نشد.');
+        restoreMsg(lines.join('\n'), 'success');
+        restoreValidated = false;
+        hideRestoreConfirm();
+        loadStatus();
+      })
+      .catch(function (e) {
+        restoreMsg('بازیابی انجام نشد: ' + (e.message || e), 'danger');
+      })
+      .finally(function () { if (applyBtn) applyBtn.disabled = !(chk && chk.checked && restoreValidated); });
   }
 
   // bind
@@ -338,10 +683,41 @@
   var dBtn = document.getElementById('bu-download');
   if (dBtn) dBtn.addEventListener('click', function () { downloadBackup(); });
   var uBtn = document.getElementById('bu-update-btn');
-  if (uBtn) uBtn.addEventListener('click', checkAndInstallUpdate);
+  if (uBtn) uBtn.addEventListener('click', openInstallConfirm);
+
+  var vBtn = document.getElementById('bu-validate');
+  if (vBtn) vBtn.addEventListener('click', function () { runValidation(); });
+
+  var sBtn = document.getElementById('bu-sched-save');
+  if (sBtn) sBtn.addEventListener('click', saveScheduleSettings);
+
+  var confirmChk = document.getElementById('bu-confirm-check');
+  if (confirmChk) confirmChk.addEventListener('change', function () {
+    var applyBtn = document.getElementById('bu-confirm-apply');
+    if (applyBtn) applyBtn.disabled = !confirmChk.checked;
+  });
+  var confirmApplyBtn = document.getElementById('bu-confirm-apply');
+  if (confirmApplyBtn) confirmApplyBtn.addEventListener('click', applyConfirmedUpdate);
+  var confirmCancelBtn = document.getElementById('bu-confirm-cancel');
+  if (confirmCancelBtn) confirmCancelBtn.addEventListener('click', hideConfirmPanel);
 
   var uploadBtn = document.getElementById('bu-upload-btn');
   if (uploadBtn) uploadBtn.addEventListener('click', uploadPackage);
+
+  // Upload & restore backup
+  var restoreUploadBtn = document.getElementById('bu-restore-upload');
+  if (restoreUploadBtn) restoreUploadBtn.addEventListener('click', uploadRestoreBackup);
+  var restoreApplyBtn = document.getElementById('bu-restore-apply');
+  if (restoreApplyBtn) restoreApplyBtn.addEventListener('click', applyRestoreBackup);
+  var restoreCancelBtn = document.getElementById('bu-restore-cancel');
+  if (restoreCancelBtn) restoreCancelBtn.addEventListener('click', hideRestoreConfirm);
+  var restoreChk = document.getElementById('bu-restore-check');
+  if (restoreChk) restoreChk.addEventListener('change', function () {
+    var b = document.getElementById('bu-restore-apply');
+    if (b) b.disabled = !(restoreChk.checked && restoreValidated);
+  });
+  var restoreInput = document.getElementById('bu-restore-file');
+  if (restoreInput) restoreInput.addEventListener('change', resetRestoreInfo);
 
   var ghSaveBtn = document.getElementById('bu-gh-save');
   if (ghSaveBtn) ghSaveBtn.addEventListener('click', saveGitHubConfig);

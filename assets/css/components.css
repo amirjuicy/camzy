@@ -483,7 +483,46 @@ select.is-invalid:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]
   color: var(--text-muted);
 }
 
+/* Product-card stepper: occupy exactly the same box as the initial
+   .product-card__add-to-cart button (100% width, .btn height/radius), so
+   switching between add and quantity states never moves card content. */
+.product-card__cart .product-card__qty {
+  width: 100%;
+  max-width: 100%;
+  height: calc(1.5em + var(--space-2) + var(--space-2) + var(--border-width) + var(--border-width));
+  margin: 0;
+  justify-content: space-between;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
 
+.product-card__cart .product-card__qty .qty-selector__btn {
+  width: 38px;
+  height: 100%;
+  margin: 0;
+  flex: 0 0 38px;
+  border-radius: 0;
+}
+
+.product-card__cart .product-card__qty .qty-selector__btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.product-card__cart .product-card__qty .qty-selector__value {
+  width: auto;
+  height: 100%;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  border: none;
+  background: transparent;
+}
 
 /* ── Price Changer (dual pricing) — matched to "افزودن به سبد خرید" ──
    Same proportions / radius / typography / spacing as

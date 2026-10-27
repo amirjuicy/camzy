@@ -217,6 +217,22 @@
   var sidebarCloser = $('.admin-sidebar__close');
   if (sidebarCloser) sidebarCloser.addEventListener('click', closeSidebar);
 
+  /* Lazy-load hook for the backup/update page: the module registers
+     window.CamzyAdminBackup.load and is refetched on every navigation. */
+  (function hookBackupUpdateView() {
+    var baseShowView = showView;
+    showView = function (name) {
+      baseShowView(name);
+      if (name === 'backup-update') {
+        setTimeout(function () {
+          if (window.CamzyAdminBackup && typeof window.CamzyAdminBackup.load === 'function') {
+            window.CamzyAdminBackup.load();
+          }
+        }, 0);
+      }
+    };
+  })();
+
   /* ── Initial view from hash ───────────────────────────────── */
   function initialView() {
     var hash = (window.location.hash || '').replace(/^#\/?/, '');

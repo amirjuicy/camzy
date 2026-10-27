@@ -1,10 +1,16 @@
 {
-  "version": "1.0.0",
+  "version": "0.0.6",
   "dependencies": {
+    "archiver": "^5.3.2",
+    "bcryptjs": "^3.0.3",
     "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "jsdom": "^29.1.1",
     "multer": "^2.4.0",
-    "puppeteer-core": "^25.11.0"
+    "puppeteer-core": "^25.11.0",
+    "unzipper": "^0.10.14"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

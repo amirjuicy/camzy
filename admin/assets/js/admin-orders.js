@@ -90,7 +90,13 @@
       subtotal: subtotal,
       shipping: Number(o.shipping || 0),
       discount: Number(o.discount || 0),
-      total: Number(o.total != null ? o.total : subtotal + Number(o.shipping || 0) - Number(o.discount || 0))
+      total: Number(o.total != null ? o.total : subtotal + Number(o.shipping || 0) - Number(o.discount || 0)),
+      paymentStatus: o.paymentStatus || o.payment_status || 'unpaid',
+      paidAt: o.paidAt || o.paid_at || null,
+      paymentRefId: o.paymentRefId || o.payment_ref_id || null,
+      receiptUrl: o.receiptUrl || null,
+      selectedCardId: o.selectedCardId != null ? o.selectedCardId : null,
+      selectedCard: o.selectedCard || null
     };
   }
 
@@ -225,6 +231,103 @@
     if (badge) badge.textContent = faNum(state.orders.length);
   }
 
+  /* ── card-to-card payment: receipt + selected bank card ─── */
+  var PAYMENT_STATUS_META = {
+    unpaid:   { text: 'پرداخت نشده', badge: 'adm-badge--danger' },
+    pending:  { text: 'در انتظار تأیید پرداخت', badge: 'adm-badge--warning' },
+    paid:     { text: 'پرداخت تأیید شده', badge: 'adm-badge--success' },
+    failed:   { text: 'پرداخت ناموفق', badge: 'adm-badge--danger' },
+    refunded: { text: 'مبلغ مسترد شده', badge: 'adm-badge--info' }
+  };
+  var receiptObjectUrl = null;
+  function releaseReceiptUrl() {
+    if (receiptObjectUrl) { try { URL.revokeObjectURL(receiptObjectUrl); } catch (_) {} receiptObjectUrl = null; }
+  }
+
+  /* The card the CUSTOMER selected on this order (stored at checkout). It is
+     never replaced by the currently configured/default card: when the stored
+     card id no longer exists in «روش‌های خرید», that is what we say. */
+  function selectedCardHtml(o) {
+    if (o.selectedCard) {
+      var c = o.selectedCard;
+      return '<div><strong>کارت انتخابی مشتری:</strong> ' + esc(c.bankName || '—') +
+        (c.cardHolder ? ' — <span style="color:var(--text-muted)">' + esc(c.cardHolder) + '</span>' : '') +
+        ' — <span dir="ltr" style="font-family:monospace;letter-spacing:.5px">' + esc(c.cardNumberFormatted || c.cardNumber || '—') + '</span></div>';
+    }
+    if (o.selectedCardId) {
+      return '<div><strong>کارت انتخابی مشتری:</strong> <span style="color:#B91C22">کارت انتخابی این سفارش دیگر در تنظیمات «روش‌های خرید» ثبت نشده است.</span></div>';
+    }
+    return '<div><strong>کارت انتخابی مشتری:</strong> <span style="color:var(--text-muted)">برای این سفارش ثبت نشده است (سفارش‌های قدیمی).</span></div>';
+  }
+
+  function receiptStatusHtml(o) {
+    return o.receiptUrl ? 'در حال دریافت تصویر رسید…' : 'رسیدی برای این سفارش ثبت نشده است.';
+  }
+
+  /* Block rendered only for card-to-card orders, right above the status
+     controls, so receipt + selected card + verification are easy to find. */
+  function cardPaymentHtml(o) {
+    if (o.paymentMethod !== 'card') return '';
+    var ps = PAYMENT_STATUS_META[o.paymentStatus] || { text: o.paymentStatus || '—', badge: 'adm-badge--warning' };
+    var verify = '<div><strong>وضعیت تأیید پرداخت:</strong> <span class="adm-badge ' + ps.badge + '">' + ps.text + '</span>' +
+      (o.paymentStatus === 'paid' && o.paidAt ? ' <span style="color:var(--text-muted);font-size:11px">' + esc(o.paidAt) + '</span>' : '') +
+      (o.paymentRefId ? ' — <span dir="ltr" style="font-size:11px">' + esc(o.paymentRefId) + '</span>' : '') + '</div>';
+    return '<div id="adm-om-cardpay" style="border:1px solid var(--border-color-light,#eee);border-radius:10px;padding:10px 12px;display:grid;gap:8px;background:#fff">' +
+      '<strong style="font-size:13px">پرداخت کارت به کارت</strong>' + verify + selectedCardHtml(o) +
+      '<div id="adm-om-receipt"><strong>رسید واریز:</strong> ' +
+      '<span id="adm-om-receipt-status" style="color:var(--text-muted);font-size:12px">' + receiptStatusHtml(o) + '</span>' +
+      '<div id="adm-om-receipt-view" hidden style="margin-top:6px">' +
+      '<a id="adm-om-receipt-link" target="_blank" rel="noopener" title="مشاهده رسید در اندازه کامل">' +
+      '<img id="adm-om-receipt-img" alt="رسید واریز" style="display:block;max-width:200px;max-height:200px;border:1px solid var(--border-color-light,#e5e7eb);border-radius:8px;cursor:zoom-in">' +
+      '</a>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">برای مشاهده در اندازه کامل روی تصویر کلیک کنید.</div>' +
+      '</div></div></div>';
+  }
+
+  /* Receipt images are admin-only: fetched with the bearer token as a blob and
+     shown from an object URL, so no receipt URL ever reaches the page from a
+     public path. A missing receipt shows a status line, never a broken image. */
+  function loadReceiptImage(o) {
+    var status = document.getElementById('adm-om-receipt-status');
+    var view = document.getElementById('adm-om-receipt-view');
+    var img = document.getElementById('adm-om-receipt-img');
+    var link = document.getElementById('adm-om-receipt-link');
+    if (!status || !view || !img || !link) return;
+    releaseReceiptUrl();
+    if (!o.receiptUrl) { status.textContent = receiptStatusHtml(o); view.hidden = true; return; }
+    var t = tok();
+    fetch(API + '/orders/' + encodeURIComponent(o.id) + '/receipt', { headers: t ? { Authorization: 'Bearer ' + t } : {} })
+      .then(function (res) {
+        if (res.status === 404) {
+          return res.json().catch(function () { return {}; }).then(function (j) {
+            var e = new Error('not_found');
+            e.code = (j && j.code) || 'no_receipt';
+            throw e;
+          });
+        }
+        if (!res.ok) { var h = new Error('http_' + res.status); throw h; }
+        return res.blob();
+      })
+      .then(function (blob) {
+        receiptObjectUrl = URL.createObjectURL(blob);
+        img.src = receiptObjectUrl;
+        link.href = receiptObjectUrl;
+        view.hidden = false;
+        status.textContent = '';
+        status.style.color = '';
+      })
+      .catch(function (err) {
+        view.hidden = true;
+        try { img.removeAttribute('src'); } catch (_) {}
+        var code = (err && err.code) || (err && err.message) || '';
+        var missing = code === 'no_receipt' || code === 'receipt_missing' || code === 'not_found';
+        status.style.color = missing ? 'var(--text-muted)' : '#B91C22';
+        status.textContent = missing
+          ? 'رسیدی برای این سفارش ثبت نشده است.'
+          : 'دریافت تصویر رسید ممکن نشد.';
+      });
+  }
+
   /* ── details modal (reuses .adm-modal styles) ────────────── */
   function modal() { return document.getElementById('adm-order-modal'); }
 
@@ -249,6 +352,7 @@
   }
 
   function fillDetails(m, o) {
+    releaseReceiptUrl();
     var meta = STATUS_META[o.status];
     var items = o.items.length ? o.items.map(function (it) {
       var optionsHtml = '';
@@ -280,6 +384,7 @@
       '<div style="display:flex;justify-content:space-between"><span>تخفیف' + (o.discountCode ? ' (' + esc(o.discountCode) + ')' : '') + '</span><span>' + faNum(o.discount) + ' تومان</span></div>' +
       '<div style="display:flex;justify-content:space-between;font-weight:700"><span>مبلغ نهایی</span><span>' + faNum(o.total) + ' تومان</span></div>' +
       '</div>' +
+      cardPaymentHtml(o) +
       '<label style="display:flex;align-items:center;gap:8px"><strong>تغییر وضعیت:</strong>' +
       '<select class="input" id="adm-om-status" style="flex:1">' +
       Object.keys(STATUS_META).filter(function (k) { return k !== 'shipping'; }).map(function (k) {
@@ -324,9 +429,12 @@
         });
       });
     }
+    // Receipt image is loaded with the admin token after the block is in the DOM.
+    loadReceiptImage(o);
   }
 
   function closeDetails() {
+    releaseReceiptUrl();
     var m = modal();
     if (!m) return;
     m.classList.remove('is-open');

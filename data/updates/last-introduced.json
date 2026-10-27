@@ -1,0 +1,4 @@
+[
+  "scripts/build-release.js",
+  "test_github_update_workflow.js"
+]

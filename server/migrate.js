@@ -185,6 +185,11 @@ function migrate() {
   ensureColumn(db, 'orders', 'payment_ref_id', 'TEXT');
   ensureColumn(db, 'orders', 'payment_amount', 'INTEGER');
   ensureColumn(db, 'orders', 'paid_at', 'TEXT');
+  /* Card-to-card: what the customer actually picked at checkout — the uploaded
+   * receipt and the bank card selected in «روش‌های خرید». NULL on orders that
+   * predate this column: historical selections are never guessed or backfilled. */
+  ensureColumn(db, 'orders', 'receipt_url', 'TEXT');
+  ensureColumn(db, 'orders', 'selected_card_id', 'INTEGER');
   db.exec(`CREATE TABLE IF NOT EXISTS payment_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
